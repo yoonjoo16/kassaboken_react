@@ -3,6 +3,7 @@ import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import Home from "routes/Home";
 import Auth from "routes/Auth";
 import Cashbook from "routes/Cashbook";
+import Calculator from "routes/Calculator";
 import Statistics from "routes/Statistics";
 import Navigation from "components/Navigation";
 
@@ -18,6 +19,9 @@ const AppRouter = ({ isLoggedIn }) => {
             </Route>
             <Route exact path="/cashbook">
               <Cashbook />
+            </Route>
+            <Route exact path="/calculator">
+              <Calculator />
             </Route>
             <Route exact path="/statistics">
               <Statistics />
