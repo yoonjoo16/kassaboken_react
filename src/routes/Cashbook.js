@@ -1,30 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { dbService, storageService } from "fbase";
 import Record from "components/Record2";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
+import {
+  FormControl,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  ButtonGroup,
+  TextField,
+  Typography,
+  InputLabel,
+  MenuItem,
+  Fab,
+  Paper,
+  Grid,
+  Box,
+  Container,
+  Modal,
+} from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-import Modal from "@mui/material/Modal";
-import Fab from "@mui/material/Fab";
+
 import AddIcon from "@mui/icons-material/Add";
-import ButtonGroup from "@mui/material/ButtonGroup";
 import { positions } from "@mui/system";
 
 const Cashbook = () => {
@@ -33,9 +36,24 @@ const Cashbook = () => {
   const [newDate, setNewDate] = useState(new Date());
   const [newAmount, setNewAmount] = useState(0);
   const [records, setRecords] = useState([]);
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [addingOpen, setAddingOpen] = useState(false);
+  const [editingOpen, setEditingOpen] = useState(false);
+  const [editingRecordId, setEditingRecordId] = useState("");
+  const handleOpen = (mod) => {
+    if (mod == "adding") {
+      setAddingOpen(true);
+    } else {
+      setEditingOpen(true);
+    }
+  };
+  const handleClose = (mod) => {
+    if (mod == "adding") {
+      setAddingOpen(false);
+    } else {
+      setEditingOpen(false);
+    }
+    initStates();
+  };
 
   const modalStyle = {
     position: "absolute",
@@ -56,11 +74,30 @@ const Cashbook = () => {
       amount: newAmount,
     };
     await dbService.collection("cashbook").add(newRecord);
+    console.log("added");
+    initStates();
+    handleClose("adding");
+  };
+
+  const initStates = () => {
     setNewUser("");
     setNewPlace("");
     setNewDate(new Date());
     setNewAmount(0);
-    handleClose();
+    setEditingRecordId("");
+  };
+
+  const onUpdate = async (event) => {
+    event.preventDefault();
+    await dbService.doc(`cashbook/${editingRecordId}`).update({
+      user: newUser,
+      place: newPlace,
+      date: newDate,
+      amount: newAmount,
+    });
+    console.log("updated");
+    initStates();
+    handleClose("editing");
   };
 
   const onUserChange = (event) => {
@@ -68,13 +105,6 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setNewUser(value);
-  };
-
-  const onDateChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setNewDate(value);
   };
 
   const onAmountChange = (event) => {
@@ -167,23 +197,36 @@ const Cashbook = () => {
                             variant="text"
                             aria-label="text button group"
                           >
-                            <Button onClick={handleOpen}>Edit</Button>
+                            {/* Edit modal */}
+                            <Button
+                              onClick={(e) => {
+                                setEditingRecordId(record.id);
+                                console.log(record.id);
+                                setNewUser(record.user);
+                                setNewAmount(record.amount);
+                                setNewDate(record.date.toDate());
+                                setNewPlace(record.place);
+                                console.log(editingRecordId);
+                                handleOpen("editing");
+                              }}
+                            >
+                              Edit
+                            </Button>
                             <Modal
-                              open={open}
-                              onClose={handleClose}
-                              aria-labelledby="modal-adding"
-                              aria-describedby="modal-modal-description"
+                              open={editingOpen}
+                              onClose={() => handleClose("editing")}
+                              aria-labelledby="modal-editing"
                             >
                               <Box sx={modalStyle}>
-                                <Box component="form" onSubmit={onSubmit}>
+                                <Box component="form" onSubmit={onUpdate}>
                                   <FormControl margin="normal">
-                                    <InputLabel id="demo-simple-select-helper-label">
+                                    <InputLabel id="editing-simple-select-helper-label">
                                       User
                                     </InputLabel>
                                     <Select
-                                      labelId="demo-simple-select-helper-label"
-                                      id="demo-simple-select-helper"
-                                      value={record.user}
+                                      labelId="editing-simple-select-helper-label"
+                                      id="editing-simple-select-helper"
+                                      value={newUser}
                                       onChange={onUserChange}
                                       label="user"
                                     >
@@ -199,7 +242,7 @@ const Cashbook = () => {
                                     >
                                       <DatePicker
                                         label="Date"
-                                        value={record.date}
+                                        value={newDate}
                                         onChange={setNewDate}
                                         renderInput={(params) => (
                                           <TextField {...params} />
@@ -212,7 +255,7 @@ const Cashbook = () => {
                                     margin="normal"
                                     type="text"
                                     label="Amount"
-                                    value={record.amount}
+                                    value={newAmount}
                                     onChange={onAmountChange}
                                   />
                                   <br />
@@ -220,7 +263,7 @@ const Cashbook = () => {
                                     margin="normal"
                                     type="text"
                                     label="Place"
-                                    value={record.place}
+                                    value={newPlace}
                                     onChange={onPlaceChange}
                                   />
                                   <TextField
@@ -231,6 +274,7 @@ const Cashbook = () => {
                                 </Box>
                               </Box>
                             </Modal>
+
                             <Button onClick={(e) => onDeleteClick(record.id)}>
                               Delete
                             </Button>
@@ -245,24 +289,28 @@ const Cashbook = () => {
           </Grid>
           <Grid item xs={8}></Grid>
           <Grid item xs={4}>
-            <Fab color="primary" aria-label="add" onClick={handleOpen}>
+            <Fab
+              color="primary"
+              aria-label="add"
+              onClick={() => handleOpen("adding")}
+            >
               <AddIcon />
             </Fab>
+            {/* Add modal */}
             <Modal
-              open={open}
-              onClose={handleClose}
+              open={addingOpen}
+              onClose={() => handleClose("adding")}
               aria-labelledby="modal-adding"
-              aria-describedby="modal-modal-description"
             >
               <Box sx={modalStyle}>
                 <Box component="form" onSubmit={onSubmit}>
                   <FormControl margin="normal">
-                    <InputLabel id="demo-simple-select-helper-label">
+                    <InputLabel id="adding-simple-select-helper-label">
                       User
                     </InputLabel>
                     <Select
-                      labelId="demo-simple-select-helper-label"
-                      id="demo-simple-select-helper"
+                      labelId="adding-simple-select-helper-label"
+                      id="adding-simple-select-helper"
                       value={newUser}
                       onChange={onUserChange}
                       label="user"
