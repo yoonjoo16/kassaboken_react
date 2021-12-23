@@ -37,8 +37,9 @@ const Cashbook = () => {
   const [newAmount, setNewAmount] = useState(0);
 
   const [records, setRecords] = useState([]);
-  const [year, setYear] = useState("2021");
-  const [month, setMonth] = useState("12");
+  const [year, setYear] = useState(2021);
+  const [month, setMonth] = useState(12);
+  const [selectedRecords, setSelectedRecords] = useState([]);
 
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
@@ -84,6 +85,22 @@ const Cashbook = () => {
     });
   }, []);
 
+  useEffect(() => {
+    selectRecordsByMonth();
+  }, [year, month, records]);
+
+  const selectRecordsByMonth = () => {
+    var startDate = new Date(year, month - 1, 1); //month starts from 0
+    var endDate = new Date(year, month, 0, 23, 59, 59);
+    var filtered = records.filter((obj) => {
+      return obj.date.toDate() >= startDate && obj.date.toDate() <= endDate;
+    });
+    filtered.sort((a, b) => {
+      return a.date - b.date;
+    });
+    setSelectedRecords(filtered);
+  };
+
   const handleOpen = (mod) => {
     if (mod == "adding") {
       setAddingOpen(true);
@@ -110,6 +127,8 @@ const Cashbook = () => {
     };
     await dbService.collection("cashbook").add(newRecord);
     console.log("added");
+    setYear(newDate.getFullYear());
+    setMonth(newDate.getMonth() + 1);
     initStates();
     handleClose("adding");
   };
@@ -123,6 +142,8 @@ const Cashbook = () => {
       amount: newAmount,
     });
     console.log("updated");
+    setYear(newDate.getFullYear());
+    setMonth(newDate.getMonth() + 1);
     initStates();
     handleClose("editing");
   };
@@ -160,6 +181,7 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setMonth(value);
+    console.log(`${value} is chosen`);
   };
 
   const selectYear = (event) => {
@@ -167,6 +189,7 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setYear(value);
+    console.log(`${value} is chosen`);
   };
 
   return (
@@ -180,31 +203,34 @@ const Cashbook = () => {
             label="selectYear"
             onChange={selectYear}
           >
-            <MenuItem value="2021">2021</MenuItem>
-            <MenuItem value="2020">2020</MenuItem>
-            <MenuItem value="2019">2019</MenuItem>
+            <MenuItem value={2021}>2021</MenuItem>
+            <MenuItem value={2020}>2020</MenuItem>
+            <MenuItem value={2019}>2019</MenuItem>
           </Select>
         </FormControl>
-        <ToggleButtonGroup
-          value={month}
-          exclusive
-          onChange={selectMonth}
-          aria-label="selectMonth"
-          sx={{ m: 2, minWidth: 80 }}
-        >
-          <ToggleButton value="01">1</ToggleButton>
-          <ToggleButton value="02">2</ToggleButton>
-          <ToggleButton value="03">3</ToggleButton>
-          <ToggleButton value="04">4</ToggleButton>
-          <ToggleButton value="05">5</ToggleButton>
-          <ToggleButton value="06">6</ToggleButton>
-          <ToggleButton value="07">7</ToggleButton>
-          <ToggleButton value="08">8</ToggleButton>
-          <ToggleButton value="09">9</ToggleButton>
-          <ToggleButton value="10">10</ToggleButton>
-          <ToggleButton value="11">11</ToggleButton>
-          <ToggleButton value="12">12</ToggleButton>
-        </ToggleButtonGroup>
+
+        <FormControl sx={{ m: 1, minWidth: 80 }}>
+          <InputLabel id="selectMonth-label">Month</InputLabel>
+          <Select
+            value={month}
+            labelId="selectMonth-label"
+            label="selectMonth"
+            onChange={selectMonth}
+          >
+            <MenuItem value={1}>1</MenuItem>
+            <MenuItem value={2}>2</MenuItem>
+            <MenuItem value={3}>3</MenuItem>
+            <MenuItem value={4}>4</MenuItem>
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={6}>6</MenuItem>
+            <MenuItem value={7}>7</MenuItem>
+            <MenuItem value={8}>8</MenuItem>
+            <MenuItem value={9}>9</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={11}>11</MenuItem>
+            <MenuItem value={12}>12</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
@@ -232,7 +258,7 @@ const Cashbook = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {records.map((record) => (
+                    {selectedRecords.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell style={{ width: "25%" }} align="center">
                           {record.date.toDate().toDateString()}
