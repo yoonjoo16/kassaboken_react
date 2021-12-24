@@ -23,23 +23,25 @@ import {
   Modal,
   ToggleButton,
   ToggleButtonGroup,
+  Autocomplete,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
-
 import AddIcon from "@mui/icons-material/Add";
 
 const Cashbook = () => {
   const [newUser, setNewUser] = useState("");
-  const [newPlace, setNewPlace] = useState("");
+  const [newPlace, setNewPlace] = useState({ label: "", category: "" });
   const [newDate, setNewDate] = useState(new Date());
   const [newAmount, setNewAmount] = useState(0);
 
   const [records, setRecords] = useState([]);
-  const [year, setYear] = useState(2021);
-  const [month, setMonth] = useState(12);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [selectedRecords, setSelectedRecords] = useState([]);
+
+  const [places, setPlaces] = useState([]);
 
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
@@ -57,14 +59,17 @@ const Cashbook = () => {
 
   const initStates = () => {
     setNewUser("");
-    setNewPlace("");
+    setNewPlace({ label: "", category: "" });
     setNewDate(new Date());
     setNewAmount(0);
     setEditingRecordId("");
   };
 
   const getRecords = async () => {
-    const dbRecords = await dbService.collection("cashbook").get();
+    const dbRecords = await dbService
+      .collection("cashbook2")
+      .orderBy("category")
+      .get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -74,9 +79,21 @@ const Cashbook = () => {
     });
   };
 
+  const getPlaces = async () => {
+    const dbPlaces = await dbService.collection("places").get();
+    dbPlaces.forEach((item) => {
+      const placeObj = {
+        ...item.data(),
+        id: item.id,
+      };
+      setPlaces((prev) => [placeObj, ...prev]);
+    });
+  };
+
   useEffect(() => {
     getRecords();
-    dbService.collection("cashbook").onSnapshot((snapshot) => {
+    getPlaces();
+    dbService.collection("cashbook2").onSnapshot((snapshot) => {
       const recordArray = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -125,7 +142,7 @@ const Cashbook = () => {
       date: newDate,
       amount: newAmount,
     };
-    await dbService.collection("cashbook").add(newRecord);
+    await dbService.collection("cashbook2").add(newRecord);
     console.log("added");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -135,12 +152,13 @@ const Cashbook = () => {
 
   const onUpdate = async (event) => {
     event.preventDefault();
-    await dbService.doc(`cashbook/${editingRecordId}`).update({
+    const newRecord = {
       user: newUser,
       place: newPlace,
       date: newDate,
       amount: newAmount,
-    });
+    };
+    await dbService.doc(`cashbook2/${editingRecordId}`).update(newRecord);
     console.log("updated");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -162,17 +180,10 @@ const Cashbook = () => {
     setNewAmount(Number(value));
   };
 
-  const onPlaceChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setNewPlace(value);
-  };
-
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`cashbook/${id}`).delete();
+      await dbService.doc(`cashbook2/${id}`).delete();
     }
   };
 
@@ -181,7 +192,6 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setMonth(value);
-    console.log(`${value} is chosen`);
   };
 
   const selectYear = (event) => {
@@ -189,7 +199,6 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setYear(value);
-    console.log(`${value} is chosen`);
   };
 
   return (
@@ -203,6 +212,7 @@ const Cashbook = () => {
             label="selectYear"
             onChange={selectYear}
           >
+            <MenuItem value={2022}>2022</MenuItem>
             <MenuItem value={2021}>2021</MenuItem>
             <MenuItem value={2020}>2020</MenuItem>
             <MenuItem value={2019}>2019</MenuItem>
@@ -270,7 +280,7 @@ const Cashbook = () => {
                           {record.amount}
                         </TableCell>
                         <TableCell style={{ width: "25%" }} align="center">
-                          {record.place}
+                          {record.place.label}
                         </TableCell>
                         <TableCell style={{ width: "25%" }} align="center">
                           <ButtonGroup
@@ -337,13 +347,20 @@ const Cashbook = () => {
                                     onChange={onAmountChange}
                                   />
                                   <br />
-                                  <TextField
-                                    margin="normal"
-                                    type="text"
-                                    label="Place"
-                                    value={newPlace}
-                                    onChange={onPlaceChange}
+                                  <Autocomplete
+                                    disablePortal
+                                    options={places}
+                                    sx={{ width: 300 }}
+                                    defaultValue={newPlace}
+                                    getOptionLabel={(option) => option.label}
+                                    onChange={(event, value) =>
+                                      setNewPlace(value)
+                                    }
+                                    renderInput={(params) => (
+                                      <TextField {...params} label="Place" />
+                                    )}
                                   />
+
                                   <TextField
                                     margin="normal"
                                     type="submit"
@@ -416,13 +433,19 @@ const Cashbook = () => {
                     onChange={onAmountChange}
                   />
                   <br />
-                  <TextField
-                    margin="normal"
-                    type="text"
-                    label="Place"
-                    value={newPlace}
-                    onChange={onPlaceChange}
+
+                  <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={places}
+                    sx={{ width: 300 }}
+                    getOptionLabel={(option) => option.label}
+                    onChange={(event, value) => setNewPlace(value)}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Place" />
+                    )}
                   />
+
                   <TextField margin="normal" type="submit" value="register" />
                 </Box>
               </Box>

@@ -6,6 +6,7 @@ import Cashbook from "routes/Cashbook";
 import Calculator from "routes/Calculator";
 import Statistics from "routes/Statistics";
 import Navigation from "components/Navigation";
+import AddPlaces from "routes/AddPlaces";
 
 const AppRouter = ({ isLoggedIn }) => {
   return (
@@ -25,6 +26,9 @@ const AppRouter = ({ isLoggedIn }) => {
             </Route>
             <Route exact path="/statistics">
               <Statistics />
+            </Route>
+            <Route exact path="/addplaces">
+              <AddPlaces />
             </Route>
           </>
         ) : (

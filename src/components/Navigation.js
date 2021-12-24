@@ -48,6 +48,15 @@ const Navigation = () => {
             Statistics
           </Link>
 
+          <Link
+            underline="hover"
+            color="inherit"
+            component={RouterLink}
+            to="/addplaces"
+          >
+            Add places
+          </Link>
+
           <Button onClick={onLogOutClick}>Log out</Button>
         </Breadcrumbs>
       </Grid>
