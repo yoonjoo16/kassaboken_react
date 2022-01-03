@@ -13,6 +13,7 @@ const Navigation = () => {
     authService.signOut();
     history.push("/");
   };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid item xs={12}>
@@ -43,18 +44,17 @@ const Navigation = () => {
             underline="hover"
             color="inherit"
             component={RouterLink}
-            to="/statistics"
+            to="/addplaces"
           >
-            Statistics
+            Add places
           </Link>
-
           <Link
             underline="hover"
             color="inherit"
             component={RouterLink}
-            to="/addplaces"
+            to="/statistics"
           >
-            Add places
+            Statistics
           </Link>
 
           <Button onClick={onLogOutClick}>Log out</Button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { dbService, storageService } from "fbase";
+import { dbService } from "fbase";
 
 import {
   FormControl,
@@ -13,32 +13,30 @@ import {
   Button,
   ButtonGroup,
   TextField,
-  Typography,
   InputLabel,
   MenuItem,
   Fab,
   Paper,
   Grid,
   Box,
-  Container,
   Modal,
-  ToggleButton,
-  ToggleButtonGroup,
-  Autocomplete,
 } from "@mui/material";
-import DateAdapter from "@mui/lab/AdapterDateFns";
-import LocalizationProvider from "@mui/lab/LocalizationProvider";
-import DatePicker from "@mui/lab/DatePicker";
+
 import AddIcon from "@mui/icons-material/Add";
 
 const AddPlaces = () => {
   const [places, setPlaces] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [newCategory, setNewCategory] = useState("");
   const [newLabel, setNewLabel] = useState("");
 
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingPlaceId, setEditingPlaceId] = useState("");
+
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedPlaces, setSelectedPlaces] = useState([]);
 
   const modalStyle = {
     position: "absolute",
@@ -80,6 +78,18 @@ const AddPlaces = () => {
         setPlaces(recordArray);
       });
   }, []);
+
+  useEffect(() => {
+    setCategories([...new Set(places.map((x) => x.category))]);
+  }, [places]);
+
+  useEffect(() => {
+    if (selectedCategory == "All") {
+      setSelectedPlaces(places);
+    } else {
+      setSelectedPlaces(places.filter((x) => x.category == selectedCategory));
+    }
+  }, [selectedCategory]);
 
   const onCategoryChange = (event) => {
     const {
@@ -142,9 +152,31 @@ const AddPlaces = () => {
     }
   };
 
+  const selectCategory = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedCategory(value);
+  };
+
   return (
     <div>
-      <h1>Let's add places!!!</h1>
+      <Box sx={{ flexGrow: 1 }}>
+        <FormControl sx={{ m: 1, minWidth: 150 }}>
+          <InputLabel id="selectedCategory-label">Category</InputLabel>
+          <Select
+            value={selectedCategory}
+            labelId="selectedCategory-label"
+            label="Category"
+            onChange={selectCategory}
+          >
+            <MenuItem value="All">All</MenuItem>
+            {categories.map((cat) => (
+              <MenuItem value={cat}>{cat}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
           <Grid item xs={8}>
@@ -165,7 +197,7 @@ const AddPlaces = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {places.map((place) => (
+                    {selectedPlaces.map((place) => (
                       <TableRow key={place.id}>
                         <TableCell style={{ width: "25%" }} align="center">
                           {place.category}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { dbService, storageService } from "fbase";
+import Moment from "react-moment";
 import {
   FormControl,
   Select,
@@ -29,12 +30,17 @@ import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
 import AddIcon from "@mui/icons-material/Add";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import moment from "moment";
 
 const Cashbook = () => {
   const [newUser, setNewUser] = useState("");
   const [newPlace, setNewPlace] = useState({ label: "", category: "" });
   const [newDate, setNewDate] = useState(new Date());
   const [newAmount, setNewAmount] = useState(0);
+  const [newSettled, setNewSettled] = useState(false);
+  const [newNote, setNewNote] = useState("");
 
   const [records, setRecords] = useState([]);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -62,6 +68,8 @@ const Cashbook = () => {
     setNewPlace({ label: "", category: "" });
     setNewDate(new Date());
     setNewAmount(0);
+    setNewSettled(false);
+    setNewNote("");
     setEditingRecordId("");
   };
 
@@ -141,6 +149,8 @@ const Cashbook = () => {
       place: newPlace,
       date: newDate,
       amount: newAmount,
+      settled: newSettled,
+      note: newNote,
     };
     await dbService.collection("cashbook2").add(newRecord);
     console.log("added");
@@ -157,6 +167,8 @@ const Cashbook = () => {
       place: newPlace,
       date: newDate,
       amount: newAmount,
+      settled: newSettled,
+      note: newNote,
     };
     await dbService.doc(`cashbook2/${editingRecordId}`).update(newRecord);
     console.log("updated");
@@ -178,6 +190,20 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setNewAmount(Number(value));
+  };
+
+  const onSettledChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setNewSettled(value);
+  };
+
+  const onNoteChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setNewNote(value);
   };
 
   const onDeleteClick = async (id) => {
@@ -250,19 +276,26 @@ const Cashbook = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell style={{ width: "25%" }} align="center">
+                      <TableCell style={{ width: "10%" }} align="center">
                         Date
                       </TableCell>
-                      <TableCell style={{ width: "25%" }} align="center">
+                      <TableCell style={{ width: "10%" }} align="center">
                         Name
                       </TableCell>
-                      <TableCell style={{ width: "25%" }} align="center">
+                      <TableCell style={{ width: "10%" }} align="center">
                         Amount
                       </TableCell>
-                      <TableCell style={{ width: "25%" }} align="center">
+                      <TableCell style={{ width: "20%" }} align="center">
                         Place
                       </TableCell>
-                      <TableCell style={{ width: "25%" }} align="center">
+                      <TableCell style={{ width: "20%" }} align="center">
+                        Note
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Settled
+                      </TableCell>
+
+                      <TableCell style={{ width: "20%" }} align="center">
                         Edit/Delete
                       </TableCell>
                     </TableRow>
@@ -270,19 +303,25 @@ const Cashbook = () => {
                   <TableBody>
                     {selectedRecords.map((record) => (
                       <TableRow key={record.id}>
-                        <TableCell style={{ width: "25%" }} align="center">
-                          {record.date.toDate().toDateString()}
+                        <TableCell align="center">
+                          <Moment format="YYYY/MM/DD">
+                            {record.date.toDate()}
+                          </Moment>
                         </TableCell>
-                        <TableCell style={{ width: "25%" }} align="center">
-                          {record.user}
-                        </TableCell>
-                        <TableCell style={{ width: "25%" }} align="center">
-                          {record.amount}
-                        </TableCell>
-                        <TableCell style={{ width: "25%" }} align="center">
+                        <TableCell align="center">{record.user}</TableCell>
+                        <TableCell align="center">{record.amount}</TableCell>
+                        <TableCell align="center">
                           {record.place.label}
                         </TableCell>
-                        <TableCell style={{ width: "25%" }} align="center">
+                        <TableCell align="center">{record.note}</TableCell>
+                        <TableCell align="center">
+                          {record.settled ? (
+                            <CheckBoxIcon />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon />
+                          )}
+                        </TableCell>
+                        <TableCell align="center">
                           <ButtonGroup
                             variant="text"
                             aria-label="text button group"
@@ -295,6 +334,8 @@ const Cashbook = () => {
                                 setNewAmount(record.amount);
                                 setNewDate(record.date.toDate());
                                 setNewPlace(record.place);
+                                setNewSettled(record.settled);
+                                setNewNote(record.note);
                                 handleOpen("editing");
                               }}
                             >
@@ -324,6 +365,7 @@ const Cashbook = () => {
                                       </MenuItem>
                                     </Select>
                                   </FormControl>
+                                  <br />
                                   <FormControl margin="normal">
                                     <LocalizationProvider
                                       dateAdapter={DateAdapter}
@@ -346,11 +388,11 @@ const Cashbook = () => {
                                     value={newAmount}
                                     onChange={onAmountChange}
                                   />
-                                  <br />
+
                                   <Autocomplete
                                     disablePortal
                                     options={places}
-                                    sx={{ width: 300 }}
+                                    sx={{ width: 200 }}
                                     defaultValue={newPlace}
                                     getOptionLabel={(option) => option.label}
                                     onChange={(event, value) =>
@@ -360,11 +402,33 @@ const Cashbook = () => {
                                       <TextField {...params} label="Place" />
                                     )}
                                   />
+                                  <TextField
+                                    margin="normal"
+                                    type="text"
+                                    label="Note"
+                                    value={newNote}
+                                    onChange={onNoteChange}
+                                  />
+                                  <FormControl margin="normal">
+                                    <InputLabel id="settled-editing-label">
+                                      Settled
+                                    </InputLabel>
+                                    <Select
+                                      labelId="settled-editing-label"
+                                      id="settled-editing"
+                                      value={newSettled}
+                                      onChange={onSettledChange}
+                                      label="Settled"
+                                    >
+                                      <MenuItem value={true}>True</MenuItem>
+                                      <MenuItem value={false}>False</MenuItem>
+                                    </Select>
+                                  </FormControl>
 
                                   <TextField
                                     margin="normal"
                                     type="submit"
-                                    value="register"
+                                    value="Update"
                                   />
                                 </Box>
                               </Box>
@@ -446,6 +510,26 @@ const Cashbook = () => {
                     )}
                   />
 
+                  <TextField
+                    margin="normal"
+                    type="text"
+                    label="Note"
+                    value={newNote}
+                    onChange={onNoteChange}
+                  />
+                  <FormControl margin="normal">
+                    <InputLabel id="settled-adding-label">Settled</InputLabel>
+                    <Select
+                      labelId="settled-adding-label"
+                      id="settled-adding"
+                      value={newSettled}
+                      onChange={onSettledChange}
+                      label="Settled"
+                    >
+                      <MenuItem value={true}>True</MenuItem>
+                      <MenuItem value={false}>False</MenuItem>
+                    </Select>
+                  </FormControl>
                   <TextField margin="normal" type="submit" value="register" />
                 </Box>
               </Box>
