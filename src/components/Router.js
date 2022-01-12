@@ -8,7 +8,7 @@ import Statistics from "routes/Statistics";
 import Navigation from "components/Navigation";
 import AddPlaces from "routes/AddPlaces";
 
-const AppRouter = ({ isLoggedIn }) => {
+const AppRouter = ({ isLoggedIn, isAdmin }) => {
   return (
     <Router>
       {isLoggedIn && <Navigation />}
@@ -16,19 +16,19 @@ const AppRouter = ({ isLoggedIn }) => {
         {isLoggedIn ? (
           <>
             <Route exact path="/">
-              <Home />
+              <Home isAdmin={isAdmin} />
             </Route>
             <Route exact path="/cashbook">
-              <Cashbook />
+              <Cashbook isAdmin={isAdmin} />
             </Route>
             <Route exact path="/calculator">
-              <Calculator />
+              <Calculator isAdmin={isAdmin} />
             </Route>
             <Route exact path="/statistics">
-              <Statistics />
+              <Statistics isAdmin={isAdmin} />
             </Route>
             <Route exact path="/addplaces">
-              <AddPlaces />
+              <AddPlaces isAdmin={isAdmin} />
             </Route>
           </>
         ) : (

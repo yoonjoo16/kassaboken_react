@@ -24,7 +24,7 @@ import {
 
 import AddIcon from "@mui/icons-material/Add";
 
-const AddPlaces = () => {
+const AddPlaces = ({ isAdmin }) => {
   const [places, setPlaces] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -38,11 +38,13 @@ const AddPlaces = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedPlaces, setSelectedPlaces] = useState([]);
 
+  var placeDB = "places2";
+
   const modalStyle = {
-    position: "absolute",
-    top: "20%",
-    left: "30%",
-    transform: "translate(-50%, -50%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fullWidth: true,
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 4,
@@ -55,7 +57,12 @@ const AddPlaces = () => {
   };
 
   const getPlaces = async () => {
-    const dbPlaces = await dbService.collection("places").get();
+    if (isAdmin) {
+      placeDB = "places";
+    }
+    const dbPlaces = await dbService
+      .collection(isAdmin ? "places" : "places2")
+      .get();
     dbPlaces.forEach((item) => {
       const placeObj = {
         ...item.data(),
@@ -67,8 +74,9 @@ const AddPlaces = () => {
 
   useEffect(() => {
     getPlaces();
+    console.log("useEffect1");
     dbService
-      .collection("places")
+      .collection(isAdmin ? "places" : "places2")
       .orderBy("category")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
@@ -77,19 +85,19 @@ const AddPlaces = () => {
         }));
         setPlaces(recordArray);
       });
+    setCategories([...new Set(places.map((x) => x.category))]);
   }, []);
 
   useEffect(() => {
+    console.log("useEffect2");
     setCategories([...new Set(places.map((x) => x.category))]);
-  }, [places]);
-
-  useEffect(() => {
     if (selectedCategory == "All") {
       setSelectedPlaces(places);
     } else {
-      setSelectedPlaces(places.filter((x) => x.category == selectedCategory));
+      var selected = places.filter((x) => x.category == selectedCategory);
+      setSelectedPlaces(selected);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, places]);
 
   const onCategoryChange = (event) => {
     const {
@@ -127,7 +135,7 @@ const AddPlaces = () => {
       label: newLabel,
       category: newCategory,
     };
-    await dbService.collection("places").add(newPlace);
+    await dbService.collection(placeDB).add(newPlace);
     console.log("added");
     initStates();
     handleClose("adding");
@@ -139,7 +147,7 @@ const AddPlaces = () => {
       label: newLabel,
       category: newCategory,
     };
-    await dbService.doc(`places/${editingPlaceId}`).update(newPlace);
+    await dbService.doc(`${placeDB}/${editingPlaceId}`).update(newPlace);
     console.log("updated");
     initStates();
     handleClose("editing");
@@ -148,7 +156,7 @@ const AddPlaces = () => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`places/${id}`).delete();
+      await dbService.doc(`${placeDB}/${id}`).delete();
     }
   };
 
@@ -309,4 +317,4 @@ const AddPlaces = () => {
   );
 };
 
-export default AddPlaces;
+export default React.memo(AddPlaces);

@@ -35,7 +35,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import moment from "moment";
 
-const Calculator = () => {
+const Calculator = ({ isAdmin }) => {
   const [newUser, setNewUser] = useState("");
   const [newDate, setNewDate] = useState(new Date());
   const [newAmount, setNewAmount] = useState(0);
@@ -57,8 +57,18 @@ const Calculator = () => {
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
 
-  const calculator = "calculator2";
-  const cashbooks = "cashbook2";
+  var cashbookDB = "";
+  var calculatorDB = "";
+  if (isAdmin) {
+    cashbookDB = "cashbook";
+    calculatorDB = "calculator";
+  } else {
+    cashbookDB = "cashbook2";
+    calculatorDB = "calculator2";
+  }
+
+  //const calculator = "calculator2";
+  //const cashbooks = "cashbook2";
 
   const modalStyle = {
     display: "flex",
@@ -81,7 +91,7 @@ const Calculator = () => {
   };
 
   const getRecords = async () => {
-    const dbRecords = await dbService.collection(calculator).get();
+    const dbRecords = await dbService.collection(calculatorDB).get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -92,7 +102,7 @@ const Calculator = () => {
   };
 
   const getCashbook = async () => {
-    const dbRecords = await dbService.collection(cashbooks).get();
+    const dbRecords = await dbService.collection(cashbookDB).get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -105,7 +115,7 @@ const Calculator = () => {
   useEffect(() => {
     getRecords();
     getCashbook();
-    dbService.collection(calculator).onSnapshot((snapshot) => {
+    dbService.collection(calculatorDB).onSnapshot((snapshot) => {
       const recordArray = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -190,7 +200,7 @@ const Calculator = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.collection(calculator).add(newRecord);
+    await dbService.collection(calculatorDB).add(newRecord);
     console.log("added");
     initStates();
     handleClose("adding");
@@ -206,7 +216,7 @@ const Calculator = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.doc(`${calculator}/${editingRecordId}`).update(newRecord);
+    await dbService.doc(`${calculatorDB}/${editingRecordId}`).update(newRecord);
     console.log("updated");
     initStates();
     handleClose("editing");
@@ -250,7 +260,7 @@ const Calculator = () => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`${calculator}/${id}`).delete();
+      await dbService.doc(`${calculatorDB}/${id}`).delete();
     }
   };
 

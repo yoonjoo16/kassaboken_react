@@ -34,7 +34,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import moment from "moment";
 
-const Cashbook = () => {
+const Cashbook = ({ isAdmin }) => {
   const [newUser, setNewUser] = useState("");
   const [newPlace, setNewPlace] = useState({ label: "", category: "" });
   const [newDate, setNewDate] = useState(new Date());
@@ -52,6 +52,8 @@ const Cashbook = () => {
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
+
+  var cashbookDB = "cashbook2";
 
   const modalStyle = {
     display: "flex",
@@ -74,7 +76,10 @@ const Cashbook = () => {
   };
 
   const getRecords = async () => {
-    const dbRecords = await dbService.collection("cashbook2").get();
+    if (isAdmin) {
+      cashbookDB = "cashbook";
+    }
+    const dbRecords = await dbService.collection(cashbookDB).get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -98,7 +103,7 @@ const Cashbook = () => {
   useEffect(() => {
     getRecords();
     getPlaces();
-    dbService.collection("cashbook2").onSnapshot((snapshot) => {
+    dbService.collection(cashbookDB).onSnapshot((snapshot) => {
       const recordArray = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -149,7 +154,7 @@ const Cashbook = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.collection("cashbook2").add(newRecord);
+    await dbService.collection(cashbookDB).add(newRecord);
     console.log("added");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -167,7 +172,7 @@ const Cashbook = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.doc(`cashbook2/${editingRecordId}`).update(newRecord);
+    await dbService.doc(`${cashbookDB}/${editingRecordId}`).update(newRecord);
     console.log("updated");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -206,7 +211,7 @@ const Cashbook = () => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`cashbook2/${id}`).delete();
+      await dbService.doc(`${cashbookDB}/${id}`).delete();
     }
   };
 
