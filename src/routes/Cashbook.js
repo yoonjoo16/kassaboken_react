@@ -54,10 +54,10 @@ const Cashbook = () => {
   const [editingRecordId, setEditingRecordId] = useState("");
 
   const modalStyle = {
-    position: "absolute",
-    top: "20%",
-    left: "30%",
-    transform: "translate(-50%, -50%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fullWidth: true,
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 4,
@@ -74,10 +74,7 @@ const Cashbook = () => {
   };
 
   const getRecords = async () => {
-    const dbRecords = await dbService
-      .collection("cashbook2")
-      .orderBy("category")
-      .get();
+    const dbRecords = await dbService.collection("cashbook2").get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -121,7 +118,7 @@ const Cashbook = () => {
       return obj.date.toDate() >= startDate && obj.date.toDate() <= endDate;
     });
     filtered.sort((a, b) => {
-      return a.date - b.date;
+      return b.date - a.date;
     });
     setSelectedRecords(filtered);
   };
@@ -229,48 +226,142 @@ const Cashbook = () => {
 
   return (
     <div>
-      <Box sx={{ flexGrow: 1 }}>
-        <FormControl sx={{ m: 1, minWidth: 80 }}>
-          <InputLabel id="selectYear-label">Year</InputLabel>
-          <Select
-            value={year}
-            labelId="selectYear-label"
-            label="selectYear"
-            onChange={selectYear}
-          >
-            <MenuItem value={2022}>2022</MenuItem>
-            <MenuItem value={2021}>2021</MenuItem>
-            <MenuItem value={2020}>2020</MenuItem>
-            <MenuItem value={2019}>2019</MenuItem>
-          </Select>
-        </FormControl>
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <FormControl sx={{ m: 1, minWidth: 80 }}>
+            <InputLabel id="selectYear-label">Year</InputLabel>
+            <Select
+              value={year}
+              labelId="selectYear-label"
+              label="selectYear"
+              onChange={selectYear}
+            >
+              <MenuItem value={2022}>2022</MenuItem>
+              <MenuItem value={2021}>2021</MenuItem>
+              <MenuItem value={2020}>2020</MenuItem>
+              <MenuItem value={2019}>2019</MenuItem>
+            </Select>
+          </FormControl>
 
-        <FormControl sx={{ m: 1, minWidth: 80 }}>
-          <InputLabel id="selectMonth-label">Month</InputLabel>
-          <Select
-            value={month}
-            labelId="selectMonth-label"
-            label="selectMonth"
-            onChange={selectMonth}
+          <FormControl sx={{ m: 1, minWidth: 80 }}>
+            <InputLabel id="selectMonth-label">Month</InputLabel>
+            <Select
+              value={month}
+              labelId="selectMonth-label"
+              label="selectMonth"
+              onChange={selectMonth}
+            >
+              <MenuItem value={1}>1</MenuItem>
+              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={3}>3</MenuItem>
+              <MenuItem value={4}>4</MenuItem>
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={6}>6</MenuItem>
+              <MenuItem value={7}>7</MenuItem>
+              <MenuItem value={8}>8</MenuItem>
+              <MenuItem value={9}>9</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={11}>11</MenuItem>
+              <MenuItem value={12}>12</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={4}>
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={() => handleOpen("adding")}
           >
-            <MenuItem value={1}>1</MenuItem>
-            <MenuItem value={2}>2</MenuItem>
-            <MenuItem value={3}>3</MenuItem>
-            <MenuItem value={4}>4</MenuItem>
-            <MenuItem value={5}>5</MenuItem>
-            <MenuItem value={6}>6</MenuItem>
-            <MenuItem value={7}>7</MenuItem>
-            <MenuItem value={8}>8</MenuItem>
-            <MenuItem value={9}>9</MenuItem>
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={11}>11</MenuItem>
-            <MenuItem value={12}>12</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+            <AddIcon />
+          </Fab>
+          {/* Add modal */}
+          <Modal
+            open={addingOpen}
+            onClose={() => handleClose("adding")}
+            aria-labelledby="modal-adding"
+          >
+            <Box sx={modalStyle}>
+              <Box component="form" onSubmit={onSubmit}>
+                <FormControl margin="normal" style={{ minWidth: 200 }}>
+                  <InputLabel id="adding-simple-select-helper-label">
+                    User
+                  </InputLabel>
+                  <Select
+                    labelId="adding-simple-select-helper-label"
+                    id="adding-simple-select-helper"
+                    value={newUser}
+                    onChange={onUserChange}
+                    label="user"
+                  >
+                    <MenuItem value={"Erik"}>Erik</MenuItem>
+                    <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
+                  </Select>
+                </FormControl>
+                <br />
+                <FormControl margin="normal">
+                  <LocalizationProvider dateAdapter={DateAdapter}>
+                    <DatePicker
+                      label="Date"
+                      value={newDate}
+                      onChange={setNewDate}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                  </LocalizationProvider>
+                </FormControl>
+
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="Amount"
+                  value={newAmount}
+                  onChange={onAmountChange}
+                />
+                <br />
+
+                <Autocomplete
+                  disablePortal
+                  id="combo-box-demo"
+                  options={places}
+                  sx={{ width: 300 }}
+                  getOptionLabel={(option) => option.label}
+                  onChange={(event, value) => setNewPlace(value)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Place" />
+                  )}
+                />
+
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="Note"
+                  value={newNote}
+                  onChange={onNoteChange}
+                />
+                <FormControl margin="normal">
+                  <InputLabel id="settled-adding-label">Settled</InputLabel>
+                  <Select
+                    labelId="settled-adding-label"
+                    id="settled-adding"
+                    value={newSettled}
+                    onChange={onSettledChange}
+                    label="Settled"
+                  >
+                    <MenuItem value={true}>True</MenuItem>
+                    <MenuItem value={false}>False</MenuItem>
+                  </Select>
+                </FormControl>
+                <br />
+                <TextField margin="normal" type="submit" value="register" />
+              </Box>
+            </Box>
+          </Modal>
+        </Grid>
+      </Grid>
+
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
-          <Grid item xs={8}>
+          <Grid item xs={12}>
             <Paper>
               <TableContainer>
                 <Table>
@@ -446,99 +537,10 @@ const Cashbook = () => {
               </TableContainer>
             </Paper>
           </Grid>
-          <Grid item xs={8}></Grid>
-          <Grid item xs={4}>
-            <Fab
-              color="primary"
-              aria-label="add"
-              onClick={() => handleOpen("adding")}
-            >
-              <AddIcon />
-            </Fab>
-            {/* Add modal */}
-            <Modal
-              open={addingOpen}
-              onClose={() => handleClose("adding")}
-              aria-labelledby="modal-adding"
-            >
-              <Box sx={modalStyle}>
-                <Box component="form" onSubmit={onSubmit}>
-                  <FormControl margin="normal">
-                    <InputLabel id="adding-simple-select-helper-label">
-                      User
-                    </InputLabel>
-                    <Select
-                      labelId="adding-simple-select-helper-label"
-                      id="adding-simple-select-helper"
-                      value={newUser}
-                      onChange={onUserChange}
-                      label="user"
-                    >
-                      <MenuItem value={"Erik"}>Erik</MenuItem>
-                      <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl margin="normal">
-                    <LocalizationProvider dateAdapter={DateAdapter}>
-                      <DatePicker
-                        label="Date"
-                        value={newDate}
-                        onChange={setNewDate}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </LocalizationProvider>
-                  </FormControl>
-
-                  <TextField
-                    margin="normal"
-                    type="text"
-                    label="Amount"
-                    value={newAmount}
-                    onChange={onAmountChange}
-                  />
-                  <br />
-
-                  <Autocomplete
-                    disablePortal
-                    id="combo-box-demo"
-                    options={places}
-                    sx={{ width: 300 }}
-                    getOptionLabel={(option) => option.label}
-                    onChange={(event, value) => setNewPlace(value)}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Place" />
-                    )}
-                  />
-
-                  <TextField
-                    margin="normal"
-                    type="text"
-                    label="Note"
-                    value={newNote}
-                    onChange={onNoteChange}
-                  />
-                  <FormControl margin="normal">
-                    <InputLabel id="settled-adding-label">Settled</InputLabel>
-                    <Select
-                      labelId="settled-adding-label"
-                      id="settled-adding"
-                      value={newSettled}
-                      onChange={onSettledChange}
-                      label="Settled"
-                    >
-                      <MenuItem value={true}>True</MenuItem>
-                      <MenuItem value={false}>False</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField margin="normal" type="submit" value="register" />
-                </Box>
-              </Box>
-            </Modal>
-          </Grid>
         </Grid>
       </Box>
     </div>
   );
 };
 
-export default Cashbook;
+export default React.memo(Cashbook);
