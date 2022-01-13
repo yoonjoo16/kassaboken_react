@@ -7,11 +7,12 @@ import Calculator from "routes/Calculator";
 import Statistics from "routes/Statistics";
 import Navigation from "components/Navigation";
 import AddPlaces from "routes/AddPlaces";
+import Profile from "routes/Profile";
 
 const AppRouter = ({ isLoggedIn, isAdmin }) => {
   return (
     <Router>
-      {isLoggedIn && <Navigation />}
+      <Navigation isLoggedIn={isLoggedIn} />
       <Switch>
         {isLoggedIn ? (
           <>
@@ -30,10 +31,13 @@ const AppRouter = ({ isLoggedIn, isAdmin }) => {
             <Route exact path="/addplaces">
               <AddPlaces isAdmin={isAdmin} />
             </Route>
+            <Route exact path="/profile">
+              <Profile isAdmin={isAdmin} />
+            </Route>
           </>
         ) : (
           <>
-            <Route exact path="/">
+            <Route path="/">
               <Auth />
             </Route>
           </>

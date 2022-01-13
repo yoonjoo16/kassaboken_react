@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { dbService, storageService } from "fbase";
+import { dbService } from "fbase";
 import Moment from "react-moment";
 import {
   FormControl,
@@ -13,17 +13,13 @@ import {
   Button,
   ButtonGroup,
   TextField,
-  Typography,
   InputLabel,
   MenuItem,
   Fab,
   Paper,
   Grid,
   Box,
-  Container,
   Modal,
-  ToggleButton,
-  ToggleButtonGroup,
   Autocomplete,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
@@ -32,7 +28,7 @@ import DatePicker from "@mui/lab/DatePicker";
 import AddIcon from "@mui/icons-material/Add";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import moment from "moment";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 const Cashbook = ({ isAdmin }) => {
   const [newUser, setNewUser] = useState("");
@@ -52,8 +48,6 @@ const Cashbook = ({ isAdmin }) => {
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
-
-  var cashbookDB = "cashbook2";
 
   const modalStyle = {
     display: "flex",
@@ -76,10 +70,9 @@ const Cashbook = ({ isAdmin }) => {
   };
 
   const getRecords = async () => {
-    if (isAdmin) {
-      cashbookDB = "cashbook";
-    }
-    const dbRecords = await dbService.collection(cashbookDB).get();
+    const dbRecords = await dbService
+      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -90,7 +83,9 @@ const Cashbook = ({ isAdmin }) => {
   };
 
   const getPlaces = async () => {
-    const dbPlaces = await dbService.collection("places").get();
+    const dbPlaces = await dbService
+      .collection(isAdmin ? "places" : "places2")
+      .get();
     dbPlaces.forEach((item) => {
       const placeObj = {
         ...item.data(),
@@ -103,13 +98,15 @@ const Cashbook = ({ isAdmin }) => {
   useEffect(() => {
     getRecords();
     getPlaces();
-    dbService.collection(cashbookDB).onSnapshot((snapshot) => {
-      const recordArray = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setRecords(recordArray);
-    });
+    dbService
+      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   }, []);
 
   useEffect(() => {
@@ -154,7 +151,9 @@ const Cashbook = ({ isAdmin }) => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.collection(cashbookDB).add(newRecord);
+    await dbService
+      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .add(newRecord);
     console.log("added");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -172,7 +171,9 @@ const Cashbook = ({ isAdmin }) => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.doc(`${cashbookDB}/${editingRecordId}`).update(newRecord);
+    await dbService
+      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${editingRecordId}`)
+      .update(newRecord);
     console.log("updated");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -211,7 +212,9 @@ const Cashbook = ({ isAdmin }) => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`${cashbookDB}/${id}`).delete();
+      await dbService
+        .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${id}`)
+        .delete();
     }
   };
 
@@ -231,141 +234,138 @@ const Cashbook = ({ isAdmin }) => {
 
   return (
     <div>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <FormControl sx={{ m: 1, minWidth: 80 }}>
-            <InputLabel id="selectYear-label">Year</InputLabel>
-            <Select
-              value={year}
-              labelId="selectYear-label"
-              label="selectYear"
-              onChange={selectYear}
+      <Box sx={{ m: 1 }}>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={8}>
+            <FormControl sx={{ minWidth: 80 }}>
+              <InputLabel id="selectYear-label">Year</InputLabel>
+              <Select
+                value={year}
+                labelId="selectYear-label"
+                label="selectYear"
+                onChange={selectYear}
+              >
+                <MenuItem value={2022}>2022</MenuItem>
+                <MenuItem value={2021}>2021</MenuItem>
+                <MenuItem value={2020}>2020</MenuItem>
+                <MenuItem value={2019}>2019</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 80 }}>
+              <InputLabel id="selectMonth-label">Month</InputLabel>
+              <Select
+                value={month}
+                labelId="selectMonth-label"
+                label="selectMonth"
+                onChange={selectMonth}
+              >
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={3}>3</MenuItem>
+                <MenuItem value={4}>4</MenuItem>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={6}>6</MenuItem>
+                <MenuItem value={7}>7</MenuItem>
+                <MenuItem value={8}>8</MenuItem>
+                <MenuItem value={9}>9</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={11}>11</MenuItem>
+                <MenuItem value={12}>12</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={4}>
+            <Button
+              variant="outlined"
+              startIcon={<AddCircleIcon />}
+              onClick={() => handleOpen("adding")}
             >
-              <MenuItem value={2022}>2022</MenuItem>
-              <MenuItem value={2021}>2021</MenuItem>
-              <MenuItem value={2020}>2020</MenuItem>
-              <MenuItem value={2019}>2019</MenuItem>
-            </Select>
-          </FormControl>
+              Add
+            </Button>
 
-          <FormControl sx={{ m: 1, minWidth: 80 }}>
-            <InputLabel id="selectMonth-label">Month</InputLabel>
-            <Select
-              value={month}
-              labelId="selectMonth-label"
-              label="selectMonth"
-              onChange={selectMonth}
+            {/* Add modal */}
+            <Modal
+              open={addingOpen}
+              onClose={() => handleClose("adding")}
+              aria-labelledby="modal-adding"
             >
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-              <MenuItem value={4}>4</MenuItem>
-              <MenuItem value={5}>5</MenuItem>
-              <MenuItem value={6}>6</MenuItem>
-              <MenuItem value={7}>7</MenuItem>
-              <MenuItem value={8}>8</MenuItem>
-              <MenuItem value={9}>9</MenuItem>
-              <MenuItem value={10}>10</MenuItem>
-              <MenuItem value={11}>11</MenuItem>
-              <MenuItem value={12}>12</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
+              <Box sx={modalStyle}>
+                <Box component="form" onSubmit={onSubmit}>
+                  <FormControl margin="normal" style={{ minWidth: 200 }}>
+                    <InputLabel id="adding-simple-select-helper-label">
+                      User
+                    </InputLabel>
+                    <Select
+                      labelId="adding-simple-select-helper-label"
+                      id="adding-simple-select-helper"
+                      value={newUser}
+                      onChange={onUserChange}
+                      label="user"
+                    >
+                      <MenuItem value={"Erik"}>Erik</MenuItem>
+                      <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <br />
+                  <FormControl margin="normal">
+                    <LocalizationProvider dateAdapter={DateAdapter}>
+                      <DatePicker
+                        label="Date"
+                        value={newDate}
+                        onChange={setNewDate}
+                        renderInput={(params) => <TextField {...params} />}
+                      />
+                    </LocalizationProvider>
+                  </FormControl>
 
-        <Grid item xs={4}>
-          <Fab
-            color="primary"
-            aria-label="add"
-            onClick={() => handleOpen("adding")}
-          >
-            <AddIcon />
-          </Fab>
-          {/* Add modal */}
-          <Modal
-            open={addingOpen}
-            onClose={() => handleClose("adding")}
-            aria-labelledby="modal-adding"
-          >
-            <Box sx={modalStyle}>
-              <Box component="form" onSubmit={onSubmit}>
-                <FormControl margin="normal" style={{ minWidth: 200 }}>
-                  <InputLabel id="adding-simple-select-helper-label">
-                    User
-                  </InputLabel>
-                  <Select
-                    labelId="adding-simple-select-helper-label"
-                    id="adding-simple-select-helper"
-                    value={newUser}
-                    onChange={onUserChange}
-                    label="user"
-                  >
-                    <MenuItem value={"Erik"}>Erik</MenuItem>
-                    <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                  </Select>
-                </FormControl>
-                <br />
-                <FormControl margin="normal">
-                  <LocalizationProvider dateAdapter={DateAdapter}>
-                    <DatePicker
-                      label="Date"
-                      value={newDate}
-                      onChange={setNewDate}
-                      renderInput={(params) => <TextField {...params} />}
-                    />
-                  </LocalizationProvider>
-                </FormControl>
+                  <TextField
+                    margin="normal"
+                    type="text"
+                    label="Amount"
+                    value={newAmount}
+                    onChange={onAmountChange}
+                  />
+                  <br />
 
-                <TextField
-                  margin="normal"
-                  type="text"
-                  label="Amount"
-                  value={newAmount}
-                  onChange={onAmountChange}
-                />
-                <br />
+                  <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={places}
+                    sx={{ width: 300 }}
+                    getOptionLabel={(option) => option.label}
+                    onChange={(event, value) => setNewPlace(value)}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Place" />
+                    )}
+                  />
 
-                <Autocomplete
-                  disablePortal
-                  id="combo-box-demo"
-                  options={places}
-                  sx={{ width: 300 }}
-                  getOptionLabel={(option) => option.label}
-                  onChange={(event, value) => setNewPlace(value)}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Place" />
-                  )}
-                />
-
-                <TextField
-                  margin="normal"
-                  type="text"
-                  label="Note"
-                  value={newNote}
-                  onChange={onNoteChange}
-                />
-                <FormControl margin="normal">
-                  <InputLabel id="settled-adding-label">Settled</InputLabel>
-                  <Select
-                    labelId="settled-adding-label"
-                    id="settled-adding"
-                    value={newSettled}
-                    onChange={onSettledChange}
-                    label="Settled"
-                  >
-                    <MenuItem value={true}>True</MenuItem>
-                    <MenuItem value={false}>False</MenuItem>
-                  </Select>
-                </FormControl>
-                <br />
-                <TextField margin="normal" type="submit" value="register" />
+                  <TextField
+                    margin="normal"
+                    type="text"
+                    label="Note"
+                    value={newNote}
+                    onChange={onNoteChange}
+                  />
+                  <FormControl margin="normal">
+                    <InputLabel id="settled-adding-label">Settled</InputLabel>
+                    <Select
+                      labelId="settled-adding-label"
+                      id="settled-adding"
+                      value={newSettled}
+                      onChange={onSettledChange}
+                      label="Settled"
+                    >
+                      <MenuItem value={true}>True</MenuItem>
+                      <MenuItem value={false}>False</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <br />
+                  <TextField margin="normal" type="submit" value="register" />
+                </Box>
               </Box>
-            </Box>
-          </Modal>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ flexGrow: 1 }}>
-        <Grid container spacing={2}>
+            </Modal>
+          </Grid>
           <Grid item xs={12}>
             <Paper>
               <TableContainer>

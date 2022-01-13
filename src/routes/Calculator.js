@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { dbService, storageService } from "fbase";
+import { dbService } from "fbase";
 import Moment from "react-moment";
 import {
   FormControl,
@@ -13,18 +13,13 @@ import {
   Button,
   ButtonGroup,
   TextField,
-  Typography,
   InputLabel,
   MenuItem,
   Fab,
   Paper,
   Grid,
   Box,
-  Container,
   Modal,
-  ToggleButton,
-  ToggleButtonGroup,
-  Autocomplete,
   Alert,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
@@ -33,7 +28,7 @@ import DatePicker from "@mui/lab/DatePicker";
 import AddIcon from "@mui/icons-material/Add";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import moment from "moment";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 const Calculator = ({ isAdmin }) => {
   const [newUser, setNewUser] = useState("");
@@ -57,19 +52,6 @@ const Calculator = ({ isAdmin }) => {
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
 
-  var cashbookDB = "";
-  var calculatorDB = "";
-  if (isAdmin) {
-    cashbookDB = "cashbook";
-    calculatorDB = "calculator";
-  } else {
-    cashbookDB = "cashbook2";
-    calculatorDB = "calculator2";
-  }
-
-  //const calculator = "calculator2";
-  //const cashbooks = "cashbook2";
-
   const modalStyle = {
     display: "flex",
     alignItems: "center",
@@ -91,7 +73,9 @@ const Calculator = ({ isAdmin }) => {
   };
 
   const getRecords = async () => {
-    const dbRecords = await dbService.collection(calculatorDB).get();
+    const dbRecords = await dbService
+      .collection(isAdmin ? "calculator" : "calculator2")
+      .get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -102,7 +86,9 @@ const Calculator = ({ isAdmin }) => {
   };
 
   const getCashbook = async () => {
-    const dbRecords = await dbService.collection(cashbookDB).get();
+    const dbRecords = await dbService
+      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .get();
     dbRecords.forEach((item) => {
       const recordObj = {
         ...item.data(),
@@ -115,13 +101,15 @@ const Calculator = ({ isAdmin }) => {
   useEffect(() => {
     getRecords();
     getCashbook();
-    dbService.collection(calculatorDB).onSnapshot((snapshot) => {
-      const recordArray = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setRecords(recordArray);
-    });
+    dbService
+      .collection(isAdmin ? "calculator" : "calculator2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   }, []);
 
   useEffect(() => {
@@ -130,37 +118,30 @@ const Calculator = ({ isAdmin }) => {
 
   const calculate = () => {
     var filteredCashbook = cashbook.filter((obj) => {
-      return obj.settled == false;
+      return !obj.settled;
     });
     var filteredRecords = records.filter((obj) => {
-      return obj.settled == false;
+      return !obj.settled;
     });
     var yoonjooSpent = 0;
     var erikSpent = 0;
     filteredCashbook.forEach((obj) => {
-      if (obj.user == "Yoonjoo") {
-        yoonjooSpent += obj.amount;
-      } else {
-        erikSpent += obj.amount;
-      }
+      obj.user == "Yoonjoo"
+        ? (yoonjooSpent += obj.amount)
+        : (erikSpent += obj.amount);
     });
     var totalDebt = (erikSpent - yoonjooSpent) / 2;
     filteredRecords.forEach((obj) => {
       if (obj.user == "Yoonjoo") {
-        if (obj.category == "debt") {
-          totalDebt += obj.amount;
-        } else {
-          totalDebt -= obj.amount;
-        }
+        obj.category == "debt"
+          ? (totalDebt += obj.amount)
+          : (totalDebt -= obj.amount);
       } else {
-        if (obj.category == "debt") {
-          totalDebt -= obj.amount;
-        } else {
-          totalDebt += obj.amount;
-        }
+        obj.category == "debt"
+          ? (totalDebt -= obj.amount)
+          : (totalDebt += obj.amount);
       }
     });
-    records.map((obj) => console.log(`caculate: ${obj.date}: ${obj.amount}`));
     var newRecords = records;
     newRecords.sort((a, b) => {
       return b.date - a.date;
@@ -175,18 +156,10 @@ const Calculator = ({ isAdmin }) => {
   };
 
   const handleOpen = (mod) => {
-    if (mod == "adding") {
-      setAddingOpen(true);
-    } else {
-      setEditingOpen(true);
-    }
+    mod == "adding" ? setAddingOpen(true) : setEditingOpen(true);
   };
   const handleClose = (mod) => {
-    if (mod == "adding") {
-      setAddingOpen(false);
-    } else {
-      setEditingOpen(false);
-    }
+    mod == "adding" ? setAddingOpen(false) : setEditingOpen(false);
     initStates();
   };
 
@@ -200,7 +173,9 @@ const Calculator = ({ isAdmin }) => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.collection(calculatorDB).add(newRecord);
+    await dbService
+      .collection(isAdmin ? "calculator" : "calculator2")
+      .add(newRecord);
     console.log("added");
     initStates();
     handleClose("adding");
@@ -216,7 +191,9 @@ const Calculator = ({ isAdmin }) => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService.doc(`${calculatorDB}/${editingRecordId}`).update(newRecord);
+    await dbService
+      .doc(`${isAdmin ? "calculator" : "calculator2"}/${editingRecordId}`)
+      .update(newRecord);
     console.log("updated");
     initStates();
     handleClose("editing");
@@ -260,15 +237,17 @@ const Calculator = ({ isAdmin }) => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`${calculatorDB}/${id}`).delete();
+      await dbService
+        .doc(`${isAdmin ? "calculator" : "calculator2"}/${id}`)
+        .delete();
     }
   };
 
   return (
     <div>
-      <Box sx={{ flexGrow: 1 }}>
-        <Grid container>
-          <Grid item xs={8}>
+      <Box sx={{ m: 1 }}>
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
             {settlement.debt > 0 && (
               <Alert severity="error">
                 Yoonjoo should pay {settlement.debt} kronor!{" "}
@@ -283,107 +262,17 @@ const Calculator = ({ isAdmin }) => {
               <Alert severity="success">Nothing! </Alert>
             )}
           </Grid>
-          <Grid item xs={4}>
-            <Fab
-              color="primary"
-              aria-label="add"
-              onClick={() => handleOpen("adding")}
-            >
-              <AddIcon />
-            </Fab>
-            {/* Add modal */}
-            <Modal
-              open={addingOpen}
-              onClose={() => handleClose("adding")}
-              aria-labelledby="modal-adding"
-            >
-              <Box sx={modalStyle}>
-                <Box component="form" onSubmit={onSubmit}>
-                  <FormControl margin="normal" style={{ minWidth: 200 }}>
-                    <InputLabel id="adding-simple-select-helper-label">
-                      User
-                    </InputLabel>
-                    <Select
-                      labelId="adding-simple-select-helper-label"
-                      id="adding-simple-select-helper"
-                      value={newUser}
-                      onChange={onUserChange}
-                      label="user"
-                    >
-                      <MenuItem value={"Erik"}>Erik</MenuItem>
-                      <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <br />
-                  <FormControl margin="normal">
-                    <LocalizationProvider dateAdapter={DateAdapter}>
-                      <DatePicker
-                        label="Date"
-                        value={newDate}
-                        onChange={setNewDate}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </LocalizationProvider>
-                  </FormControl>
 
-                  <TextField
-                    margin="normal"
-                    type="text"
-                    label="Amount"
-                    value={newAmount}
-                    onChange={onAmountChange}
-                  />
-                  <br />
-
-                  <FormControl margin="normal" style={{ minWidth: 200 }}>
-                    <InputLabel id="category-adding-label">Category</InputLabel>
-                    <Select
-                      labelId="category-adding-label"
-                      id="category-adding"
-                      value={newCategory}
-                      onChange={onCategoryChange}
-                      label="category"
-                    >
-                      <MenuItem value={"debt"}>Debt</MenuItem>
-                      <MenuItem value={"swish"}>Swish</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <br />
-                  <TextField
-                    margin="normal"
-                    type="text"
-                    label="Note"
-                    value={newNote}
-                    onChange={onNoteChange}
-                  />
-                  <FormControl margin="normal">
-                    <InputLabel id="settled-adding-label">Settled</InputLabel>
-                    <Select
-                      labelId="settled-adding-label"
-                      id="settled-adding"
-                      value={newSettled}
-                      onChange={onSettledChange}
-                      label="Settled"
-                    >
-                      <MenuItem value={true}>True</MenuItem>
-                      <MenuItem value={false}>False</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <br />
-                  <TextField margin="normal" type="submit" value="register" />
-                </Box>
-              </Box>
-            </Modal>
-          </Grid>
-          <Grid item xs={8}>
+          <Grid item xs={12}>
             <Alert severity="info">
-              The common expense: {settlement.commonExpense} per person / Erik
-              paid: {settlement.erikPaid} / Yoonjoo paid:
+              The common expense: {settlement.commonExpense} per person <br />
+              Erik paid: {settlement.erikPaid} / Yoonjoo paid:
               {settlement.yoonjooPaid}
             </Alert>
           </Grid>
         </Grid>
-        <Paper>
+
+        <Paper sx={{ my: 1 }}>
           <TableContainer>
             <Table>
               <TableHead>
@@ -554,6 +443,99 @@ const Calculator = ({ isAdmin }) => {
             </Table>
           </TableContainer>
         </Paper>
+
+        <Grid item xs={12} container direction="row" justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            startIcon={<AddCircleIcon />}
+            onClick={() => handleOpen("adding")}
+          >
+            Add
+          </Button>
+          {/* Add modal */}
+          <Modal
+            open={addingOpen}
+            onClose={() => handleClose("adding")}
+            aria-labelledby="modal-adding"
+          >
+            <Box sx={modalStyle}>
+              <Box component="form" onSubmit={onSubmit}>
+                <FormControl margin="normal" style={{ minWidth: 200 }}>
+                  <InputLabel id="adding-simple-select-helper-label">
+                    User
+                  </InputLabel>
+                  <Select
+                    labelId="adding-simple-select-helper-label"
+                    id="adding-simple-select-helper"
+                    value={newUser}
+                    onChange={onUserChange}
+                    label="user"
+                  >
+                    <MenuItem value={"Erik"}>Erik</MenuItem>
+                    <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
+                  </Select>
+                </FormControl>
+                <br />
+                <FormControl margin="normal">
+                  <LocalizationProvider dateAdapter={DateAdapter}>
+                    <DatePicker
+                      label="Date"
+                      value={newDate}
+                      onChange={setNewDate}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                  </LocalizationProvider>
+                </FormControl>
+
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="Amount"
+                  value={newAmount}
+                  onChange={onAmountChange}
+                />
+                <br />
+
+                <FormControl margin="normal" style={{ minWidth: 200 }}>
+                  <InputLabel id="category-adding-label">Category</InputLabel>
+                  <Select
+                    labelId="category-adding-label"
+                    id="category-adding"
+                    value={newCategory}
+                    onChange={onCategoryChange}
+                    label="category"
+                  >
+                    <MenuItem value={"debt"}>Debt</MenuItem>
+                    <MenuItem value={"swish"}>Swish</MenuItem>
+                  </Select>
+                </FormControl>
+                <br />
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="Note"
+                  value={newNote}
+                  onChange={onNoteChange}
+                />
+                <FormControl margin="normal">
+                  <InputLabel id="settled-adding-label">Settled</InputLabel>
+                  <Select
+                    labelId="settled-adding-label"
+                    id="settled-adding"
+                    value={newSettled}
+                    onChange={onSettledChange}
+                    label="Settled"
+                  >
+                    <MenuItem value={true}>True</MenuItem>
+                    <MenuItem value={false}>False</MenuItem>
+                  </Select>
+                </FormControl>
+                <br />
+                <TextField margin="normal" type="submit" value="register" />
+              </Box>
+            </Box>
+          </Modal>
+        </Grid>
       </Box>
     </div>
   );

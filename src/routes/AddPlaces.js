@@ -2,31 +2,21 @@ import React, { useState, useEffect } from "react";
 import { dbService } from "fbase";
 
 import {
-  FormControl,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
   ButtonGroup,
   TextField,
-  InputLabel,
-  MenuItem,
   Fab,
   Paper,
   Grid,
   Box,
   Modal,
+  Icon,
 } from "@mui/material";
-
-import AddIcon from "@mui/icons-material/Add";
+import { DataGrid } from "@mui/x-data-grid";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 const AddPlaces = ({ isAdmin }) => {
   const [places, setPlaces] = useState([]);
-  const [categories, setCategories] = useState([]);
 
   const [newCategory, setNewCategory] = useState("");
   const [newLabel, setNewLabel] = useState("");
@@ -34,12 +24,6 @@ const AddPlaces = ({ isAdmin }) => {
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingPlaceId, setEditingPlaceId] = useState("");
-
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedPlaces, setSelectedPlaces] = useState([]);
-
-  var placeDB = "places2";
-
   const modalStyle = {
     display: "flex",
     alignItems: "center",
@@ -57,9 +41,6 @@ const AddPlaces = ({ isAdmin }) => {
   };
 
   const getPlaces = async () => {
-    if (isAdmin) {
-      placeDB = "places";
-    }
     const dbPlaces = await dbService
       .collection(isAdmin ? "places" : "places2")
       .get();
@@ -74,7 +55,6 @@ const AddPlaces = ({ isAdmin }) => {
 
   useEffect(() => {
     getPlaces();
-    console.log("useEffect1");
     dbService
       .collection(isAdmin ? "places" : "places2")
       .orderBy("category")
@@ -85,19 +65,7 @@ const AddPlaces = ({ isAdmin }) => {
         }));
         setPlaces(recordArray);
       });
-    setCategories([...new Set(places.map((x) => x.category))]);
   }, []);
-
-  useEffect(() => {
-    console.log("useEffect2");
-    setCategories([...new Set(places.map((x) => x.category))]);
-    if (selectedCategory == "All") {
-      setSelectedPlaces(places);
-    } else {
-      var selected = places.filter((x) => x.category == selectedCategory);
-      setSelectedPlaces(selected);
-    }
-  }, [selectedCategory, places]);
 
   const onCategoryChange = (event) => {
     const {
@@ -114,18 +82,10 @@ const AddPlaces = ({ isAdmin }) => {
   };
 
   const handleOpen = (mod) => {
-    if (mod == "adding") {
-      setAddingOpen(true);
-    } else {
-      setEditingOpen(true);
-    }
+    mod == "adding" ? setAddingOpen(true) : setEditingOpen(true);
   };
   const handleClose = (mod) => {
-    if (mod == "adding") {
-      setAddingOpen(false);
-    } else {
-      setEditingOpen(false);
-    }
+    mod == "adding" ? setAddingOpen(false) : setEditingOpen(false);
     initStates();
   };
 
@@ -135,7 +95,7 @@ const AddPlaces = ({ isAdmin }) => {
       label: newLabel,
       category: newCategory,
     };
-    await dbService.collection(placeDB).add(newPlace);
+    await dbService.collection(isAdmin ? "places" : "places2").add(newPlace);
     console.log("added");
     initStates();
     handleClose("adding");
@@ -147,7 +107,9 @@ const AddPlaces = ({ isAdmin }) => {
       label: newLabel,
       category: newCategory,
     };
-    await dbService.doc(`${placeDB}/${editingPlaceId}`).update(newPlace);
+    await dbService
+      .doc(`${isAdmin ? "places" : "places2"}/${editingPlaceId}`)
+      .update(newPlace);
     console.log("updated");
     initStates();
     handleClose("editing");
@@ -156,132 +118,96 @@ const AddPlaces = ({ isAdmin }) => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`${placeDB}/${id}`).delete();
+      await dbService.doc(`${isAdmin ? "places" : "places2"}/${id}`).delete();
     }
   };
 
-  const selectCategory = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedCategory(value);
-  };
+  const columns = [
+    {
+      field: "category",
+      headerName: "Category",
+      width: 150,
+      editable: false,
+    },
+    {
+      field: "label",
+      headerName: "Place",
+      width: 150,
+      editable: false,
+    },
+
+    {
+      field: "id",
+      headerName: "",
+      width: 150,
+      editable: false,
+      renderCell: (params) => (
+        <ButtonGroup variant="text" aria-label="text button group">
+          {/* Edit modal */}
+          <Button
+            onClick={(e) => {
+              var place = places.find((x) => x.id == params.value);
+              setEditingPlaceId(place.id);
+              setNewLabel(place.label);
+              setNewCategory(place.category);
+              handleOpen("editing");
+            }}
+          >
+            Edit
+          </Button>
+          <Modal
+            open={editingOpen}
+            onClose={() => handleClose("editing")}
+            aria-labelledby="modal-editing"
+          >
+            <Box sx={modalStyle}>
+              <Box component="form" onSubmit={onUpdate}>
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="category"
+                  value={newCategory}
+                  onChange={onCategoryChange}
+                />
+
+                <TextField
+                  margin="normal"
+                  type="text"
+                  label="place"
+                  value={newLabel}
+                  onChange={onLabelChange}
+                />
+
+                <TextField margin="normal" type="submit" value="register" />
+              </Box>
+            </Box>
+          </Modal>
+
+          <Button onClick={(e) => onDeleteClick(params.value)}>Delete</Button>
+        </ButtonGroup>
+      ),
+    },
+  ];
 
   return (
     <div>
-      <Box sx={{ flexGrow: 1 }}>
-        <FormControl sx={{ m: 1, minWidth: 150 }}>
-          <InputLabel id="selectedCategory-label">Category</InputLabel>
-          <Select
-            value={selectedCategory}
-            labelId="selectedCategory-label"
-            label="Category"
-            onChange={selectCategory}
-          >
-            <MenuItem value="All">All</MenuItem>
-            {categories.map((cat) => (
-              <MenuItem value={cat}>{cat}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ m: 1 }}>
         <Grid container spacing={2}>
-          <Grid item xs={8}>
-            <Paper>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell style={{ width: "25%" }} align="center">
-                        Category
-                      </TableCell>
-                      <TableCell style={{ width: "50%" }} align="center">
-                        Name
-                      </TableCell>
-                      <TableCell style={{ width: "25%" }} align="center">
-                        Edit/Delete
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedPlaces.map((place) => (
-                      <TableRow key={place.id}>
-                        <TableCell style={{ width: "25%" }} align="center">
-                          {place.category}
-                        </TableCell>
-                        <TableCell style={{ width: "50%" }} align="center">
-                          {place.label}
-                        </TableCell>
-                        <TableCell style={{ width: "25%" }} align="center">
-                          <ButtonGroup
-                            variant="text"
-                            aria-label="text button group"
-                          >
-                            {/* Edit modal */}
-                            <Button
-                              onClick={(e) => {
-                                setEditingPlaceId(place.id);
-                                setNewLabel(place.label);
-                                setNewCategory(place.category);
-                                handleOpen("editing");
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Modal
-                              open={editingOpen}
-                              onClose={() => handleClose("editing")}
-                              aria-labelledby="modal-editing"
-                            >
-                              <Box sx={modalStyle}>
-                                <Box component="form" onSubmit={onUpdate}>
-                                  <TextField
-                                    margin="normal"
-                                    type="text"
-                                    label="category"
-                                    value={newCategory}
-                                    onChange={onCategoryChange}
-                                  />
-
-                                  <TextField
-                                    margin="normal"
-                                    type="text"
-                                    label="place"
-                                    value={newLabel}
-                                    onChange={onLabelChange}
-                                  />
-
-                                  <TextField
-                                    margin="normal"
-                                    type="submit"
-                                    value="register"
-                                  />
-                                </Box>
-                              </Box>
-                            </Modal>
-
-                            <Button onClick={(e) => onDeleteClick(place.id)}>
-                              Delete
-                            </Button>
-                          </ButtonGroup>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Grid>
-          <Grid item xs={8}></Grid>
-          <Grid item xs={4}>
-            <Fab
-              color="primary"
-              aria-label="add"
+          <Grid
+            item
+            xs={12}
+            container
+            direction="row"
+            justifyContent="flex-end"
+          >
+            <Button
+              variant="outlined"
+              startIcon={<AddCircleIcon />}
               onClick={() => handleOpen("adding")}
             >
-              <AddIcon />
-            </Fab>
+              Add
+            </Button>
+
             {/* Add modal */}
             <Modal
               open={addingOpen}
@@ -310,6 +236,17 @@ const AddPlaces = ({ isAdmin }) => {
                 </Box>
               </Box>
             </Modal>
+          </Grid>
+          <Grid item xs={12}>
+            <Paper>
+              <DataGrid
+                autoHeight
+                rows={places}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[10]}
+              />
+            </Paper>
           </Grid>
         </Grid>
       </Box>
