@@ -3,12 +3,12 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
-const Home = ({ isAdmin }) => {
+const Home = ({ isAdmin, user }) => {
   return isAdmin ? (
     <Box sx={{ m: 2 }}>
       <Paper sx={{ p: 2 }}>
         <Typography variant="h3" gutterBottom component="div">
-          Hello!
+          Hello, {user}!
         </Typography>
         <Typography variant="body1" gutterBottom>
           Welcome to Kassaboken! <p />
@@ -22,7 +22,7 @@ const Home = ({ isAdmin }) => {
     <Box sx={{ m: 2 }}>
       <Paper sx={{ p: 2 }}>
         <Typography variant="h3" gutterBottom component="div">
-          Hello!
+          Hello, {user}!
         </Typography>
         <Typography variant="body1" gutterBottom>
           Welcome to Kassaboken! <p />

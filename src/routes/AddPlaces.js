@@ -138,7 +138,7 @@ const AddPlaces = ({ isAdmin }) => {
 
     {
       field: "id",
-      headerName: "",
+      headerName: "Option",
       width: 150,
       editable: false,
       renderCell: (params) => (
@@ -243,8 +243,8 @@ const AddPlaces = ({ isAdmin }) => {
                 autoHeight
                 rows={places}
                 columns={columns}
-                pageSize={10}
-                rowsPerPageOptions={[10]}
+                pageSize={15}
+                rowsPerPageOptions={[15]}
               />
             </Paper>
           </Grid>

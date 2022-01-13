@@ -126,20 +126,26 @@ const Calculator = ({ isAdmin }) => {
     var yoonjooSpent = 0;
     var erikSpent = 0;
     filteredCashbook.forEach((obj) => {
-      obj.user == "Yoonjoo"
-        ? (yoonjooSpent += obj.amount)
-        : (erikSpent += obj.amount);
+      if (obj.user == "Yoonjoo") {
+        yoonjooSpent += obj.amount;
+      } else {
+        erikSpent += obj.amount;
+      }
     });
     var totalDebt = (erikSpent - yoonjooSpent) / 2;
     filteredRecords.forEach((obj) => {
       if (obj.user == "Yoonjoo") {
-        obj.category == "debt"
-          ? (totalDebt += obj.amount)
-          : (totalDebt -= obj.amount);
+        if (obj.category == "debt") {
+          totalDebt += obj.amount;
+        } else {
+          totalDebt -= obj.amount;
+        }
       } else {
-        obj.category == "debt"
-          ? (totalDebt -= obj.amount)
-          : (totalDebt += obj.amount);
+        if (obj.category == "debt") {
+          totalDebt -= obj.amount;
+        } else {
+          totalDebt += obj.amount;
+        }
       }
     });
     var newRecords = records;
@@ -153,6 +159,7 @@ const Calculator = ({ isAdmin }) => {
       yoonjooPaid: yoonjooSpent,
       debt: totalDebt,
     });
+    console.log(`totaldebt${settlement.debt}`);
   };
 
   const handleOpen = (mod) => {
