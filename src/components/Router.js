@@ -9,7 +9,9 @@ import Navigation from "components/Navigation";
 import AddPlaces from "routes/AddPlaces";
 import Profile from "routes/Profile";
 
-const AppRouter = ({ isLoggedIn, isAdmin, user }) => {
+const AppRouter = ({ isLoggedIn, isAdmin }) => {
+  window.localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+
   return (
     <Router>
       <Navigation isLoggedIn={isLoggedIn} />
@@ -17,22 +19,22 @@ const AppRouter = ({ isLoggedIn, isAdmin, user }) => {
         {isLoggedIn ? (
           <>
             <Route exact path="/">
-              <Home isAdmin={isAdmin} user={user.displayName} />
+              <Home />
             </Route>
             <Route exact path="/cashbook">
-              <Cashbook isAdmin={isAdmin} />
+              <Cashbook />
             </Route>
             <Route exact path="/calculator">
-              <Calculator isAdmin={isAdmin} />
+              <Calculator />
             </Route>
             <Route exact path="/statistics">
-              <Statistics isAdmin={isAdmin} />
+              <Statistics />
             </Route>
             <Route exact path="/addplaces">
-              <AddPlaces isAdmin={isAdmin} />
+              <AddPlaces />
             </Route>
             <Route exact path="/profile">
-              <Profile isAdmin={isAdmin} />
+              <Profile />
             </Route>
           </>
         ) : (

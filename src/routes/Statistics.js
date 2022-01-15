@@ -1,6 +1,8 @@
 import React from "react";
 
-const Statistics = ({ isAdmin }) => {
+const Statistics = () => {
+  var isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
+
   return (
     <div>
       <h1>Statistics!!!</h1>

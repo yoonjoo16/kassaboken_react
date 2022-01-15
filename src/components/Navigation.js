@@ -1,30 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link as RouterLink, useHistory } from "react-router-dom";
 import { authService } from "fbase";
-
-import SettingsIcon from "@mui/icons-material/Settings";
-
 import {
   Link,
-  Grid,
   Box,
-  Breadcrumbs,
   Menu,
   MenuItem,
   IconButton,
   Typography,
   Toolbar,
   AppBar,
-  Button,
 } from "@mui/material";
 import Drawer from "@material-ui/core/Drawer";
-
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 
 const Navigation = ({ isLoggedIn }) => {
   let history = useHistory();
   const onLogOutClick = () => {
+    localStorage.clear();
     authService.signOut();
     history.push("/");
   };

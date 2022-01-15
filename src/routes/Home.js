@@ -2,8 +2,12 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { authService } from "fbase";
 
-const Home = ({ isAdmin, user }) => {
+const Home = () => {
+  var isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
+  var user = authService.currentUser.displayName;
+
   return isAdmin ? (
     <Box sx={{ m: 2 }}>
       <Paper sx={{ p: 2 }}>

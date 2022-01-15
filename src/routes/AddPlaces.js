@@ -1,29 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { dbService } from "fbase";
-
 import {
   Button,
   ButtonGroup,
   TextField,
-  Fab,
   Paper,
   Grid,
   Box,
   Modal,
-  Icon,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 
-const AddPlaces = ({ isAdmin }) => {
+const AddPlaces = () => {
   const [places, setPlaces] = useState([]);
-
   const [newCategory, setNewCategory] = useState("");
   const [newLabel, setNewLabel] = useState("");
 
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingPlaceId, setEditingPlaceId] = useState("");
+
+  const isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
+
   const modalStyle = {
     display: "flex",
     alignItems: "center",

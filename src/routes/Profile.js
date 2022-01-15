@@ -3,10 +3,11 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
-import { authService, firebaseInstance } from "fbase";
+import { authService } from "fbase";
 import Button from "@mui/material/Button";
 
-const Profile = ({ isAdmin }) => {
+const Profile = () => {
+  var isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
   var user = authService.currentUser;
 
   const onDeleteClick = async (event) => {

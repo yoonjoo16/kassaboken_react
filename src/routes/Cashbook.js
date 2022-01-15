@@ -15,7 +15,6 @@ import {
   TextField,
   InputLabel,
   MenuItem,
-  Fab,
   Paper,
   Grid,
   Box,
@@ -25,12 +24,11 @@ import {
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
-import AddIcon from "@mui/icons-material/Add";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 
-const Cashbook = ({ isAdmin }) => {
+const Cashbook = () => {
   const [newUser, setNewUser] = useState("");
   const [newPlace, setNewPlace] = useState({ label: "", category: "" });
   const [newDate, setNewDate] = useState(new Date());
@@ -48,6 +46,8 @@ const Cashbook = ({ isAdmin }) => {
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
+
+  var isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
 
   const modalStyle = {
     display: "flex",

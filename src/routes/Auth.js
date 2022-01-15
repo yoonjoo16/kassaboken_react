@@ -1,9 +1,7 @@
 import { authService, firebaseInstance } from "fbase";
-import React, { useState } from "react";
-import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
+import React from "react";
+import { Button, Paper, Box } from "@mui/material";
+
 import Typography from "@mui/material/Typography";
 
 const Auth = () => {
