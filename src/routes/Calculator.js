@@ -20,12 +20,11 @@ import {
   Box,
   Modal,
   Alert,
+  Checkbox
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 const Calculator = () => {
@@ -249,6 +248,14 @@ const Calculator = () => {
     }
   };
 
+  const UpdateCheckbox = async (event, record) => {
+    event.preventDefault();
+    await dbService
+      .doc(`${isAdmin ? "calculator" : "calculator2"}/${record.id}`)
+      .update({'settled': !record.settled});
+    initStates();
+  }
+
   return (
     <div>
       <Box sx={{ m: 1 }}>
@@ -320,11 +327,11 @@ const Calculator = () => {
                     <TableCell align="center">{record.category}</TableCell>
                     <TableCell align="center">{record.note}</TableCell>
                     <TableCell align="center">
-                      {record.settled ? (
-                        <CheckBoxIcon />
-                      ) : (
-                        <CheckBoxOutlineBlankIcon />
-                      )}
+                    <Checkbox
+                             checked={record.settled}
+                             onChange={(event)=> {
+                              UpdateCheckbox(event, record)}}
+                           />
                     </TableCell>
                     <TableCell align="center">
                       <ButtonGroup
