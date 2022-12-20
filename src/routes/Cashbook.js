@@ -20,6 +20,7 @@ import {
   Box,
   Modal,
   Autocomplete,
+  Checkbox
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
@@ -154,7 +155,6 @@ const Cashbook = () => {
     await dbService
       .collection(isAdmin ? "cashbook" : "cashbook2")
       .add(newRecord);
-    console.log("added");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
     initStates();
@@ -174,12 +174,20 @@ const Cashbook = () => {
     await dbService
       .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${editingRecordId}`)
       .update(newRecord);
-    console.log("updated");
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
     initStates();
     handleClose("editing");
   };
+
+  const UpdateCheckbox = async (event, record) => {
+    event.preventDefault();
+    await dbService
+      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${record.id}`)
+      .update({'settled': !record.settled});
+    initStates();
+  }
+
 
   const onUserChange = (event) => {
     const {
@@ -231,6 +239,8 @@ const Cashbook = () => {
     } = event;
     setYear(value);
   };
+
+      
 
   return (
     <div>
@@ -412,11 +422,11 @@ const Cashbook = () => {
                         </TableCell>
                         <TableCell align="center">{record.note}</TableCell>
                         <TableCell align="center">
-                          {record.settled ? (
-                            <CheckBoxIcon />
-                          ) : (
-                            <CheckBoxOutlineBlankIcon />
-                          )}
+                             <Checkbox
+                             checked={record.settled}
+                             onChange={(event)=> {
+                              UpdateCheckbox(event, record)}}
+                           />
                         </TableCell>
                         <TableCell align="center">
                           <ButtonGroup
