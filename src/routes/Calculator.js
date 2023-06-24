@@ -20,7 +20,7 @@ import {
   Box,
   Modal,
   Alert,
-  Checkbox
+  Checkbox,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
@@ -87,6 +87,7 @@ const Calculator = () => {
   const getCashbook = async () => {
     const dbRecords = await dbService
       .collection(isAdmin ? "cashbook" : "cashbook2")
+      .where("settled", "==", false)
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -181,7 +182,6 @@ const Calculator = () => {
     await dbService
       .collection(isAdmin ? "calculator" : "calculator2")
       .add(newRecord);
-    console.log("added");
     initStates();
     handleClose("adding");
   };
@@ -199,7 +199,6 @@ const Calculator = () => {
     await dbService
       .doc(`${isAdmin ? "calculator" : "calculator2"}/${editingRecordId}`)
       .update(newRecord);
-    console.log("updated");
     initStates();
     handleClose("editing");
   };
@@ -252,9 +251,9 @@ const Calculator = () => {
     event.preventDefault();
     await dbService
       .doc(`${isAdmin ? "calculator" : "calculator2"}/${record.id}`)
-      .update({'settled': !record.settled});
+      .update({ settled: !record.settled });
     initStates();
-  }
+  };
 
   return (
     <div>
@@ -327,11 +326,12 @@ const Calculator = () => {
                     <TableCell align="center">{record.category}</TableCell>
                     <TableCell align="center">{record.note}</TableCell>
                     <TableCell align="center">
-                    <Checkbox
-                             checked={record.settled}
-                             onChange={(event)=> {
-                              UpdateCheckbox(event, record)}}
-                           />
+                      <Checkbox
+                        checked={record.settled}
+                        onChange={(event) => {
+                          UpdateCheckbox(event, record);
+                        }}
+                      />
                     </TableCell>
                     <TableCell align="center">
                       <ButtonGroup
