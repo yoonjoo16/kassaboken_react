@@ -20,7 +20,7 @@ import {
   Box,
   Modal,
   Autocomplete,
-  Checkbox
+  Checkbox,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
@@ -39,7 +39,6 @@ const Cashbook = () => {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [selectedRecords, setSelectedRecords] = useState([]);
-
   const [places, setPlaces] = useState([]);
 
   const [addingOpen, setAddingOpen] = useState(false);
@@ -71,6 +70,8 @@ const Cashbook = () => {
   const getRecords = async () => {
     const dbRecords = await dbService
       .collection(isAdmin ? "cashbook" : "cashbook2")
+      .where("date", ">=", new Date(year, month - 1, 1))
+      .where("date", "<=", new Date(year, month, 0, 23, 59, 59))
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -99,30 +100,19 @@ const Cashbook = () => {
     getPlaces();
     dbService
       .collection(isAdmin ? "cashbook" : "cashbook2")
+      .where("date", ">=", new Date(year, month - 1, 1))
+      .where("date", "<=", new Date(year, month, 0, 23, 59, 59))
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+        recordArray.sort((a, b) => {
+          return b.date - a.date;
+        });
         setRecords(recordArray);
       });
   }, []);
-
-  useEffect(() => {
-    selectRecordsByMonth();
-  }, [year, month, records]);
-
-  const selectRecordsByMonth = () => {
-    var startDate = new Date(year, month - 1, 1); //month starts from 0
-    var endDate = new Date(year, month, 0, 23, 59, 59);
-    var filtered = records.filter((obj) => {
-      return obj.date.toDate() >= startDate && obj.date.toDate() <= endDate;
-    });
-    filtered.sort((a, b) => {
-      return b.date - a.date;
-    });
-    setSelectedRecords(filtered);
-  };
 
   const handleOpen = (mod) => {
     if (mod == "adding") {
@@ -182,10 +172,9 @@ const Cashbook = () => {
     event.preventDefault();
     await dbService
       .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${record.id}`)
-      .update({'settled': !record.settled});
+      .update({ settled: !record.settled });
     initStates();
-  }
-
+  };
 
   const onUserChange = (event) => {
     const {
@@ -238,8 +227,6 @@ const Cashbook = () => {
     setYear(value);
   };
 
-      
-
   return (
     <div>
       <Box sx={{ m: 1 }}>
@@ -256,8 +243,6 @@ const Cashbook = () => {
                 <MenuItem value={2023}>2023</MenuItem>
                 <MenuItem value={2022}>2022</MenuItem>
                 <MenuItem value={2021}>2021</MenuItem>
-                <MenuItem value={2020}>2020</MenuItem>
-                <MenuItem value={2019}>2019</MenuItem>
               </Select>
             </FormControl>
 
@@ -406,7 +391,7 @@ const Cashbook = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {selectedRecords.map((record) => (
+                    {records.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell align="center">
                           <Moment format="YYYY/MM/DD">
@@ -420,11 +405,12 @@ const Cashbook = () => {
                         </TableCell>
                         <TableCell align="center">{record.note}</TableCell>
                         <TableCell align="center">
-                             <Checkbox
-                             checked={record.settled}
-                             onChange={(event)=> {
-                              UpdateCheckbox(event, record)}}
-                           />
+                          <Checkbox
+                            checked={record.settled}
+                            onChange={(event) => {
+                              UpdateCheckbox(event, record);
+                            }}
+                          />
                         </TableCell>
                         <TableCell align="center">
                           <ButtonGroup

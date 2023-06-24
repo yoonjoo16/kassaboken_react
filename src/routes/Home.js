@@ -15,7 +15,7 @@ const Home = () => {
           Hello, {user}!
         </Typography>
         <Typography variant="body1" gutterBottom>
-          Welcome to Kassaboken! <p />
+          Welcome to Kassaboken ADMIN! <p />
           This is a cashbook program for Yoonjoo and Erik. If you are not one of
           us but seeing this page, please tell Yoonjoo so that the login problem
           can be fixed.
@@ -29,13 +29,11 @@ const Home = () => {
           Hello, {user}!
         </Typography>
         <Typography variant="body1" gutterBottom>
-          Welcome to Kassaboken! <p />
-          This is a cashbook program for Yoonjoo and Erik. If you are the 'Erik'
-          but seeing this page, please contact your wife so that she can fix
-          your login problem.
-          <p /> If you are a guest, feel free to test this cashbook! You can
+          Welcome to Stenmästarevägen 5A! <p />
+          This is a homepage for Yoonjoo and Erik. We use this to register cashbook, book a time for laundry easily, or handle our iCalendar. 
+          <p /> You are visiting as a guest. Feel free to browse this cashbook! You can
           change/add/delete anything.
-          <p /> If you find some errors or have suggestion, please tell Yoonjoo.
+          <p /> If you find some errors or have suggestion, please contact Yoonjoo.
           <p /> Enjoy!
         </Typography>
       </Paper>
