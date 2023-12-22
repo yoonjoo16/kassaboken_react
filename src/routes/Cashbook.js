@@ -20,7 +20,7 @@ import {
   Box,
   Modal,
   Autocomplete,
-  Checkbox
+  Checkbox,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
@@ -70,7 +70,7 @@ const Cashbook = () => {
 
   const getRecords = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -98,7 +98,7 @@ const Cashbook = () => {
     getRecords();
     getPlaces();
     dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -151,7 +151,7 @@ const Cashbook = () => {
       note: newNote,
     };
     await dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
       .add(newRecord);
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -170,7 +170,7 @@ const Cashbook = () => {
       note: newNote,
     };
     await dbService
-      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${editingRecordId}`)
+      .doc(`${isAdmin ? "cashbook" + year : "cashbook2"}/${editingRecordId}`)
       .update(newRecord);
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
@@ -181,11 +181,10 @@ const Cashbook = () => {
   const UpdateCheckbox = async (event, record) => {
     event.preventDefault();
     await dbService
-      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${record.id}`)
-      .update({'settled': !record.settled});
+      .doc(`${isAdmin ? "cashbook" + year : "cashbook2"}/${record.id}`)
+      .update({ settled: !record.settled });
     initStates();
-  }
-
+  };
 
   const onUserChange = (event) => {
     const {
@@ -219,7 +218,7 @@ const Cashbook = () => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
       await dbService
-        .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${id}`)
+        .doc(`${isAdmin ? "cashbook" + year : "cashbook2"}/${id}`)
         .delete();
     }
   };
@@ -229,6 +228,15 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setMonth(value);
+    dbService
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   };
 
   const selectYear = (event) => {
@@ -236,9 +244,16 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setYear(value);
+    dbService
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   };
-
-      
 
   return (
     <div>
@@ -253,6 +268,7 @@ const Cashbook = () => {
                 label="selectYear"
                 onChange={selectYear}
               >
+                <MenuItem value={2024}>2024</MenuItem>
                 <MenuItem value={2023}>2023</MenuItem>
                 <MenuItem value={2022}>2022</MenuItem>
                 <MenuItem value={2021}>2021</MenuItem>
@@ -420,11 +436,12 @@ const Cashbook = () => {
                         </TableCell>
                         <TableCell align="center">{record.note}</TableCell>
                         <TableCell align="center">
-                             <Checkbox
-                             checked={record.settled}
-                             onChange={(event)=> {
-                              UpdateCheckbox(event, record)}}
-                           />
+                          <Checkbox
+                            checked={record.settled}
+                            onChange={(event) => {
+                              UpdateCheckbox(event, record);
+                            }}
+                          />
                         </TableCell>
                         <TableCell align="center">
                           <ButtonGroup
