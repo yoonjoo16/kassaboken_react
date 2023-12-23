@@ -41,7 +41,7 @@ const AddPlaces = () => {
 
   const getPlaces = async () => {
     const dbPlaces = await dbService
-      .collection(isAdmin ? "places" : "places2")
+      .collection(isAdmin ? "places" : "places_guest")
       .get();
     dbPlaces.forEach((item) => {
       const placeObj = {
@@ -55,7 +55,7 @@ const AddPlaces = () => {
   useEffect(() => {
     getPlaces();
     dbService
-      .collection(isAdmin ? "places" : "places2")
+      .collection(isAdmin ? "places" : "places_guest")
       .orderBy("category")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
@@ -94,7 +94,9 @@ const AddPlaces = () => {
       label: newLabel,
       category: newCategory,
     };
-    await dbService.collection(isAdmin ? "places" : "places2").add(newPlace);
+    await dbService
+      .collection(isAdmin ? "places" : "places_guest")
+      .add(newPlace);
     console.log("added");
     initStates();
     handleClose("adding");
@@ -107,7 +109,7 @@ const AddPlaces = () => {
       category: newCategory,
     };
     await dbService
-      .doc(`${isAdmin ? "places" : "places2"}/${editingPlaceId}`)
+      .doc(`${isAdmin ? "places" : "places_guest"}/${editingPlaceId}`)
       .update(newPlace);
     console.log("updated");
     initStates();
@@ -117,7 +119,9 @@ const AddPlaces = () => {
   const onDeleteClick = async (id) => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
-      await dbService.doc(`${isAdmin ? "places" : "places2"}/${id}`).delete();
+      await dbService
+        .doc(`${isAdmin ? "places" : "places_guest"}/${id}`)
+        .delete();
     }
   };
 

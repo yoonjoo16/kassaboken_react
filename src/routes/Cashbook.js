@@ -70,7 +70,7 @@ const Cashbook = () => {
 
   const getRecords = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -83,7 +83,7 @@ const Cashbook = () => {
 
   const getPlaces = async () => {
     const dbPlaces = await dbService
-      .collection(isAdmin ? "places" : "places2")
+      .collection(isAdmin ? "places" : "places_guest")
       .get();
     dbPlaces.forEach((item) => {
       const placeObj = {
@@ -98,7 +98,7 @@ const Cashbook = () => {
     getRecords();
     getPlaces();
     dbService
-      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -154,7 +154,9 @@ const Cashbook = () => {
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
     await dbService
-      .collection(isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook2")
+      .collection(
+        isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook_guest"
+      )
       .add(newRecord);
     initStates();
     handleClose("adding");
@@ -176,7 +178,7 @@ const Cashbook = () => {
     await dbService
       .doc(
         `${
-          isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook2"
+          isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook_guest"
         }/${editingRecordId}`
       )
       .update(newRecord);
@@ -187,7 +189,7 @@ const Cashbook = () => {
   const UpdateCheckbox = async (event, record) => {
     event.preventDefault();
     await dbService
-      .doc(`${isAdmin ? "cashbook" + year : "cashbook2"}/${record.id}`)
+      .doc(`${isAdmin ? "cashbook" + year : "cashbook_guest"}/${record.id}`)
       .update({ settled: !record.settled });
     initStates();
   };
@@ -224,7 +226,7 @@ const Cashbook = () => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
       await dbService
-        .doc(`${isAdmin ? "cashbook" + year : "cashbook2"}/${id}`)
+        .doc(`${isAdmin ? "cashbook" + year : "cashbook_guest"}/${id}`)
         .delete();
     }
   };
@@ -235,7 +237,7 @@ const Cashbook = () => {
     } = event;
     setMonth(value);
     dbService
-      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -251,7 +253,7 @@ const Cashbook = () => {
     } = event;
     setYear(value);
     dbService
-      .collection(isAdmin ? "cashbook" + value : "cashbook2")
+      .collection(isAdmin ? "cashbook" + value : "cashbook_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,

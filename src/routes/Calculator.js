@@ -75,7 +75,7 @@ const Calculator = () => {
 
   const getRecords = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "calculator" + year : "calculator2")
+      .collection(isAdmin ? "calculator" + year : "calculator_guest")
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -88,7 +88,7 @@ const Calculator = () => {
 
   const getCashbook = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "cashbook" + year : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .where("settled", "==", false)
       .get();
     dbRecords.forEach((item) => {
@@ -104,7 +104,7 @@ const Calculator = () => {
     getRecords();
     getCashbook();
     dbService
-      .collection(isAdmin ? "calculator" + year : "calculator2")
+      .collection(isAdmin ? "calculator" + year : "calculator_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -120,7 +120,7 @@ const Calculator = () => {
     } = event;
     setYear(value);
     dbService
-      .collection(isAdmin ? "cashbook" + value : "cashbook2")
+      .collection(isAdmin ? "cashbook" + value : "cashbook_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -129,7 +129,7 @@ const Calculator = () => {
         setCashbook(recordArray);
       });
     dbService
-      .collection(isAdmin ? "calculator" + value : "calculator2")
+      .collection(isAdmin ? "calculator" + value : "calculator_guest")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -209,7 +209,7 @@ const Calculator = () => {
     setYear(newDate.getFullYear());
     await dbService
       .collection(
-        isAdmin ? "calculator" + newDate.getFullYear() : "calculator2"
+        isAdmin ? "calculator" + newDate.getFullYear() : "calculator_guest"
       )
       .add(newRecord);
     initStates();
@@ -230,7 +230,7 @@ const Calculator = () => {
     await dbService
       .doc(
         `${
-          isAdmin ? "calculator" + newDate.getFullYear() : "calculator2"
+          isAdmin ? "calculator" + newDate.getFullYear() : "calculator_guest"
         }/${editingRecordId}`
       )
       .update(newRecord);
@@ -277,7 +277,7 @@ const Calculator = () => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
       await dbService
-        .doc(`${isAdmin ? "calculator" + year : "calculator2"}/${id}`)
+        .doc(`${isAdmin ? "calculator" + year : "calculator_guest"}/${id}`)
         .delete();
     }
   };
@@ -285,7 +285,7 @@ const Calculator = () => {
   const UpdateCheckbox = async (event, record) => {
     event.preventDefault();
     await dbService
-      .doc(`${isAdmin ? "calculator" + year : "calculator2"}/${record.id}`)
+      .doc(`${isAdmin ? "calculator" + year : "calculator_guest"}/${record.id}`)
       .update({ settled: !record.settled });
     initStates();
   };
