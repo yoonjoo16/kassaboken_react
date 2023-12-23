@@ -19,7 +19,7 @@ const Profile = () => {
           window.alert("The account has been removed from Kassaboken.");
         })
         .catch((err) => {
-          window.alert("Error! Contact Yoonjoo.");
+          window.alert("Error! Contact yoonjoo16@gmail.com");
         });
     }
   };
