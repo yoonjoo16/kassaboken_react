@@ -35,6 +35,8 @@ const Calculator = () => {
   const [newNote, setNewNote] = useState("");
   const [newCategory, setNewCategory] = useState("");
 
+  const [year, setYear] = useState(new Date().getFullYear());
+
   const [records, setRecords] = useState([]);
   const [sortedRecords, setSortedRecords] = useState([]);
   const [cashbook, setCashbook] = useState([]);
@@ -73,7 +75,7 @@ const Calculator = () => {
 
   const getRecords = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "calculator" : "calculator2")
+      .collection(isAdmin ? "calculator" + year : "calculator2")
       .get();
     dbRecords.forEach((item) => {
       const recordObj = {
@@ -86,7 +88,7 @@ const Calculator = () => {
 
   const getCashbook = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook2")
       .where("settled", "==", false)
       .get();
     dbRecords.forEach((item) => {
@@ -102,7 +104,7 @@ const Calculator = () => {
     getRecords();
     getCashbook();
     dbService
-      .collection(isAdmin ? "calculator" : "calculator2")
+      .collection(isAdmin ? "calculator" + year : "calculator2")
       .onSnapshot((snapshot) => {
         const recordArray = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -112,9 +114,34 @@ const Calculator = () => {
       });
   }, []);
 
+  const selectYear = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setYear(value);
+    dbService
+      .collection(isAdmin ? "cashbook" + value : "cashbook2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setCashbook(recordArray);
+      });
+    dbService
+      .collection(isAdmin ? "calculator" + value : "calculator2")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
+  };
+
   useEffect(() => {
     calculate();
-  }, [records, cashbook]);
+  }, [year, records, cashbook]);
 
   const calculate = () => {
     var filteredCashbook = cashbook.filter((obj) => {
@@ -179,8 +206,11 @@ const Calculator = () => {
       settled: newSettled,
       note: newNote,
     };
+    setYear(newDate.getFullYear());
     await dbService
-      .collection(isAdmin ? "calculator" : "calculator2")
+      .collection(
+        isAdmin ? "calculator" + newDate.getFullYear() : "calculator2"
+      )
       .add(newRecord);
     initStates();
     handleClose("adding");
@@ -196,8 +226,13 @@ const Calculator = () => {
       settled: newSettled,
       note: newNote,
     };
+    setYear(newDate.getFullYear());
     await dbService
-      .doc(`${isAdmin ? "calculator" : "calculator2"}/${editingRecordId}`)
+      .doc(
+        `${
+          isAdmin ? "calculator" + newDate.getFullYear() : "calculator2"
+        }/${editingRecordId}`
+      )
       .update(newRecord);
     initStates();
     handleClose("editing");
@@ -242,7 +277,7 @@ const Calculator = () => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
       await dbService
-        .doc(`${isAdmin ? "calculator" : "calculator2"}/${id}`)
+        .doc(`${isAdmin ? "calculator" + year : "calculator2"}/${id}`)
         .delete();
     }
   };
@@ -250,7 +285,7 @@ const Calculator = () => {
   const UpdateCheckbox = async (event, record) => {
     event.preventDefault();
     await dbService
-      .doc(`${isAdmin ? "calculator" : "calculator2"}/${record.id}`)
+      .doc(`${isAdmin ? "calculator" + year : "calculator2"}/${record.id}`)
       .update({ settled: !record.settled });
     initStates();
   };
@@ -282,272 +317,291 @@ const Calculator = () => {
               {settlement.yoonjooPaid}
             </Alert>
           </Grid>
-        </Grid>
 
-        <Paper sx={{ my: 1 }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Date
-                  </TableCell>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Name
-                  </TableCell>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Amount
-                  </TableCell>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Category
-                  </TableCell>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Note
-                  </TableCell>
-                  <TableCell style={{ width: "10%" }} align="center">
-                    Settled
-                  </TableCell>
-                  <TableCell
-                    style={{ width: "10%" }}
-                    align="center"
-                  ></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell align="center">
-                      <Moment format="YYYY/MM/DD">
-                        {record.date.toDate()}
-                      </Moment>
-                    </TableCell>
-                    <TableCell align="center">{record.user}</TableCell>
-                    <TableCell align="center">{record.amount}</TableCell>
-                    <TableCell align="center">{record.category}</TableCell>
-                    <TableCell align="center">{record.note}</TableCell>
-                    <TableCell align="center">
-                      <Checkbox
-                        checked={record.settled}
-                        onChange={(event) => {
-                          UpdateCheckbox(event, record);
-                        }}
+          <Grid item xs={8}>
+            <FormControl sx={{ minWidth: 80 }}>
+              <InputLabel id="selectYear-label">Year</InputLabel>
+              <Select
+                value={year}
+                labelId="selectYear-label"
+                label="selectYear"
+                onChange={selectYear}
+              >
+                <MenuItem value={2024}>2024</MenuItem>
+                <MenuItem value={2023}>2023</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={4}>
+            <Button
+              variant="outlined"
+              startIcon={<AddCircleIcon />}
+              onClick={() => handleOpen("adding")}
+            >
+              Add
+            </Button>
+            {/* Add modal */}
+            <Modal
+              open={addingOpen}
+              onClose={() => handleClose("adding")}
+              aria-labelledby="modal-adding"
+            >
+              <Box sx={modalStyle}>
+                <Box component="form" onSubmit={onSubmit}>
+                  <FormControl margin="normal" style={{ minWidth: 200 }}>
+                    <InputLabel id="adding-simple-select-helper-label">
+                      User
+                    </InputLabel>
+                    <Select
+                      labelId="adding-simple-select-helper-label"
+                      id="adding-simple-select-helper"
+                      value={newUser}
+                      onChange={onUserChange}
+                      label="user"
+                    >
+                      <MenuItem value={"Erik"}>Erik</MenuItem>
+                      <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <br />
+                  <FormControl margin="normal">
+                    <LocalizationProvider dateAdapter={DateAdapter}>
+                      <DatePicker
+                        label="Date"
+                        value={newDate}
+                        onChange={setNewDate}
+                        renderInput={(params) => <TextField {...params} />}
                       />
-                    </TableCell>
-                    <TableCell align="center">
-                      <ButtonGroup
-                        variant="text"
-                        aria-label="text button group"
-                      >
-                        {/* Edit modal */}
-                        <Button
-                          onClick={(e) => {
-                            setEditingRecordId(record.id);
-                            setNewUser(record.user);
-                            setNewAmount(record.amount);
-                            setNewDate(record.date.toDate());
-                            setNewCategory(record.category);
-                            setNewSettled(record.settled);
-                            setNewNote(record.note);
-                            handleOpen("editing");
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Modal
-                          open={editingOpen}
-                          onClose={() => handleClose("editing")}
-                          aria-labelledby="modal-editing"
-                        >
-                          <Box sx={modalStyle}>
-                            <Box component="form" onSubmit={onUpdate}>
-                              <FormControl margin="normal">
-                                <InputLabel id="editing-simple-select-helper-label">
-                                  User
-                                </InputLabel>
-                                <Select
-                                  labelId="editing-simple-select-helper-label"
-                                  id="editing-simple-select-helper"
-                                  value={newUser}
-                                  onChange={onUserChange}
-                                  label="user"
-                                >
-                                  <MenuItem value={"Erik"}>Erik</MenuItem>
-                                  <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                                </Select>
-                              </FormControl>
-                              <br />
-                              <FormControl margin="normal">
-                                <LocalizationProvider dateAdapter={DateAdapter}>
-                                  <DatePicker
-                                    label="Date"
-                                    value={newDate}
-                                    onChange={setNewDate}
-                                    renderInput={(params) => (
-                                      <TextField {...params} />
-                                    )}
-                                  />
-                                </LocalizationProvider>
-                              </FormControl>
+                    </LocalizationProvider>
+                  </FormControl>
 
-                              <TextField
-                                margin="normal"
-                                type="text"
-                                label="Amount"
-                                value={newAmount}
-                                onChange={onAmountChange}
-                              />
+                  <TextField
+                    margin="normal"
+                    type="text"
+                    label="Amount"
+                    value={newAmount}
+                    onChange={onAmountChange}
+                  />
+                  <br />
 
-                              <FormControl margin="normal">
-                                <InputLabel id="category-editing-label">
-                                  Category
-                                </InputLabel>
-                                <Select
-                                  labelId="category-editing-label"
-                                  id="category-editing"
-                                  value={newCategory}
-                                  onChange={onCategoryChange}
-                                  label="category"
-                                >
-                                  <MenuItem value={"debt"}>Debt</MenuItem>
-                                  <MenuItem value={"swish"}>Swish</MenuItem>
-                                </Select>
-                              </FormControl>
-
-                              <TextField
-                                margin="normal"
-                                type="text"
-                                label="Note"
-                                value={newNote}
-                                onChange={onNoteChange}
-                              />
-                              <FormControl margin="normal">
-                                <InputLabel id="settled-editing-label">
-                                  Settled
-                                </InputLabel>
-                                <Select
-                                  labelId="settled-editing-label"
-                                  id="settled-editing"
-                                  value={newSettled}
-                                  onChange={onSettledChange}
-                                  label="Settled"
-                                >
-                                  <MenuItem value={true}>True</MenuItem>
-                                  <MenuItem value={false}>False</MenuItem>
-                                </Select>
-                              </FormControl>
-
-                              <TextField
-                                margin="normal"
-                                type="submit"
-                                value="Update"
-                              />
-                            </Box>
-                          </Box>
-                        </Modal>
-
-                        <Button onClick={(e) => onDeleteClick(record.id)}>
-                          Delete
-                        </Button>
-                      </ButtonGroup>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-
-        <Grid item xs={12} container direction="row" justifyContent="flex-end">
-          <Button
-            variant="outlined"
-            startIcon={<AddCircleIcon />}
-            onClick={() => handleOpen("adding")}
-          >
-            Add
-          </Button>
-          {/* Add modal */}
-          <Modal
-            open={addingOpen}
-            onClose={() => handleClose("adding")}
-            aria-labelledby="modal-adding"
-          >
-            <Box sx={modalStyle}>
-              <Box component="form" onSubmit={onSubmit}>
-                <FormControl margin="normal" style={{ minWidth: 200 }}>
-                  <InputLabel id="adding-simple-select-helper-label">
-                    User
-                  </InputLabel>
-                  <Select
-                    labelId="adding-simple-select-helper-label"
-                    id="adding-simple-select-helper"
-                    value={newUser}
-                    onChange={onUserChange}
-                    label="user"
-                  >
-                    <MenuItem value={"Erik"}>Erik</MenuItem>
-                    <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                  </Select>
-                </FormControl>
-                <br />
-                <FormControl margin="normal">
-                  <LocalizationProvider dateAdapter={DateAdapter}>
-                    <DatePicker
-                      label="Date"
-                      value={newDate}
-                      onChange={setNewDate}
-                      renderInput={(params) => <TextField {...params} />}
-                    />
-                  </LocalizationProvider>
-                </FormControl>
-
-                <TextField
-                  margin="normal"
-                  type="text"
-                  label="Amount"
-                  value={newAmount}
-                  onChange={onAmountChange}
-                />
-                <br />
-
-                <FormControl margin="normal" style={{ minWidth: 200 }}>
-                  <InputLabel id="category-adding-label">Category</InputLabel>
-                  <Select
-                    labelId="category-adding-label"
-                    id="category-adding"
-                    value={newCategory}
-                    onChange={onCategoryChange}
-                    label="category"
-                  >
-                    <MenuItem value={"debt"}>Debt</MenuItem>
-                    <MenuItem value={"swish"}>Swish</MenuItem>
-                  </Select>
-                </FormControl>
-                <br />
-                <TextField
-                  margin="normal"
-                  type="text"
-                  label="Note"
-                  value={newNote}
-                  onChange={onNoteChange}
-                />
-                <FormControl margin="normal">
-                  <InputLabel id="settled-adding-label">Settled</InputLabel>
-                  <Select
-                    labelId="settled-adding-label"
-                    id="settled-adding"
-                    value={newSettled}
-                    onChange={onSettledChange}
-                    label="Settled"
-                  >
-                    <MenuItem value={true}>True</MenuItem>
-                    <MenuItem value={false}>False</MenuItem>
-                  </Select>
-                </FormControl>
-                <br />
-                <TextField margin="normal" type="submit" value="register" />
+                  <FormControl margin="normal" style={{ minWidth: 200 }}>
+                    <InputLabel id="category-adding-label">Category</InputLabel>
+                    <Select
+                      labelId="category-adding-label"
+                      id="category-adding"
+                      value={newCategory}
+                      onChange={onCategoryChange}
+                      label="category"
+                    >
+                      <MenuItem value={"debt"}>Debt</MenuItem>
+                      <MenuItem value={"swish"}>Swish</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <br />
+                  <TextField
+                    margin="normal"
+                    type="text"
+                    label="Note"
+                    value={newNote}
+                    onChange={onNoteChange}
+                  />
+                  <FormControl margin="normal">
+                    <InputLabel id="settled-adding-label">Settled</InputLabel>
+                    <Select
+                      labelId="settled-adding-label"
+                      id="settled-adding"
+                      value={newSettled}
+                      onChange={onSettledChange}
+                      label="Settled"
+                    >
+                      <MenuItem value={true}>True</MenuItem>
+                      <MenuItem value={false}>False</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <br />
+                  <TextField margin="normal" type="submit" value="register" />
+                </Box>
               </Box>
-            </Box>
-          </Modal>
+            </Modal>
+          </Grid>
+          <Grid item xs={12}>
+            <Paper sx={{ my: 1 }}>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Date
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Name
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Amount
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Category
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Note
+                      </TableCell>
+                      <TableCell style={{ width: "10%" }} align="center">
+                        Settled
+                      </TableCell>
+                      <TableCell
+                        style={{ width: "10%" }}
+                        align="center"
+                      ></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sortedRecords.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell align="center">
+                          <Moment format="YYYY/MM/DD">
+                            {record.date.toDate()}
+                          </Moment>
+                        </TableCell>
+                        <TableCell align="center">{record.user}</TableCell>
+                        <TableCell align="center">{record.amount}</TableCell>
+                        <TableCell align="center">{record.category}</TableCell>
+                        <TableCell align="center">{record.note}</TableCell>
+                        <TableCell align="center">
+                          <Checkbox
+                            checked={record.settled}
+                            onChange={(event) => {
+                              UpdateCheckbox(event, record);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <ButtonGroup
+                            variant="text"
+                            aria-label="text button group"
+                          >
+                            {/* Edit modal */}
+                            <Button
+                              onClick={(e) => {
+                                setEditingRecordId(record.id);
+                                setNewUser(record.user);
+                                setNewAmount(record.amount);
+                                setNewDate(record.date.toDate());
+                                setNewCategory(record.category);
+                                setNewSettled(record.settled);
+                                setNewNote(record.note);
+                                handleOpen("editing");
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Modal
+                              open={editingOpen}
+                              onClose={() => handleClose("editing")}
+                              aria-labelledby="modal-editing"
+                            >
+                              <Box sx={modalStyle}>
+                                <Box component="form" onSubmit={onUpdate}>
+                                  <FormControl margin="normal">
+                                    <InputLabel id="editing-simple-select-helper-label">
+                                      User
+                                    </InputLabel>
+                                    <Select
+                                      labelId="editing-simple-select-helper-label"
+                                      id="editing-simple-select-helper"
+                                      value={newUser}
+                                      onChange={onUserChange}
+                                      label="user"
+                                    >
+                                      <MenuItem value={"Erik"}>Erik</MenuItem>
+                                      <MenuItem value={"Yoonjoo"}>
+                                        Yoonjoo
+                                      </MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                  <br />
+                                  <FormControl margin="normal">
+                                    <LocalizationProvider
+                                      dateAdapter={DateAdapter}
+                                    >
+                                      <DatePicker
+                                        label="Date"
+                                        value={newDate}
+                                        onChange={setNewDate}
+                                        renderInput={(params) => (
+                                          <TextField {...params} />
+                                        )}
+                                      />
+                                    </LocalizationProvider>
+                                  </FormControl>
+
+                                  <TextField
+                                    margin="normal"
+                                    type="text"
+                                    label="Amount"
+                                    value={newAmount}
+                                    onChange={onAmountChange}
+                                  />
+
+                                  <FormControl margin="normal">
+                                    <InputLabel id="category-editing-label">
+                                      Category
+                                    </InputLabel>
+                                    <Select
+                                      labelId="category-editing-label"
+                                      id="category-editing"
+                                      value={newCategory}
+                                      onChange={onCategoryChange}
+                                      label="category"
+                                    >
+                                      <MenuItem value={"debt"}>Debt</MenuItem>
+                                      <MenuItem value={"swish"}>Swish</MenuItem>
+                                    </Select>
+                                  </FormControl>
+
+                                  <TextField
+                                    margin="normal"
+                                    type="text"
+                                    label="Note"
+                                    value={newNote}
+                                    onChange={onNoteChange}
+                                  />
+                                  <FormControl margin="normal">
+                                    <InputLabel id="settled-editing-label">
+                                      Settled
+                                    </InputLabel>
+                                    <Select
+                                      labelId="settled-editing-label"
+                                      id="settled-editing"
+                                      value={newSettled}
+                                      onChange={onSettledChange}
+                                      label="Settled"
+                                    >
+                                      <MenuItem value={true}>True</MenuItem>
+                                      <MenuItem value={false}>False</MenuItem>
+                                    </Select>
+                                  </FormControl>
+
+                                  <TextField
+                                    margin="normal"
+                                    type="submit"
+                                    value="Update"
+                                  />
+                                </Box>
+                              </Box>
+                            </Modal>
+
+                            <Button onClick={(e) => onDeleteClick(record.id)}>
+                              Delete
+                            </Button>
+                          </ButtonGroup>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
         </Grid>
       </Box>
     </div>
