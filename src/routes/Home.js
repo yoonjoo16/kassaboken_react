@@ -29,11 +29,11 @@ const Home = () => {
           Hello, {user}!
         </Typography>
         <Typography variant="body1" gutterBottom>
-          Welcome to Stenmästarevägen 5A! <p />
-          This is a homepage for Yoonjoo and Erik. We use this to register cashbook, book a time for laundry easily, or handle our iCalendar. 
-          <p /> You are visiting as a guest. Feel free to browse this cashbook! You can
-          change/add/delete anything.
-          <p /> If you find some errors or have suggestion, please contact Yoonjoo.
+          Welcome to Kassaboken Guest! <p />
+          <p /> You are visiting as a guest. Feel free to browse this cashbook!
+          You can change/add/delete anything.
+          <p /> If you find some errors or have suggestion, please contact
+          Yoonjoo.
           <p /> Enjoy!
         </Typography>
       </Paper>
