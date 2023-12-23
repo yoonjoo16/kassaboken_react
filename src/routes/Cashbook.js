@@ -69,7 +69,7 @@ const Cashbook = () => {
 
   const getRecords = async () => {
     const dbRecords = await dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .where("date", ">=", new Date(year, month - 1, 1))
       .where("date", "<=", new Date(year, month, 0, 23, 59, 59))
       .get();
@@ -84,7 +84,7 @@ const Cashbook = () => {
 
   const getPlaces = async () => {
     const dbPlaces = await dbService
-      .collection(isAdmin ? "places" : "places2")
+      .collection(isAdmin ? "places" : "places_guest")
       .get();
     dbPlaces.forEach((item) => {
       const placeObj = {
@@ -99,7 +99,7 @@ const Cashbook = () => {
     getRecords();
     getPlaces();
     dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
       .where("date", ">=", new Date(year, month - 1, 1))
       .where("date", "<=", new Date(year, month, 0, 23, 59, 59))
       .onSnapshot((snapshot) => {
@@ -140,11 +140,14 @@ const Cashbook = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService
-      .collection(isAdmin ? "cashbook" : "cashbook2")
-      .add(newRecord);
+
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
+    await dbService
+      .collection(
+        isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook_guest"
+      )
+      .add(newRecord);
     initStates();
     handleClose("adding");
   };
@@ -159,11 +162,16 @@ const Cashbook = () => {
       settled: newSettled,
       note: newNote,
     };
-    await dbService
-      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${editingRecordId}`)
-      .update(newRecord);
+
     setYear(newDate.getFullYear());
     setMonth(newDate.getMonth() + 1);
+    await dbService
+      .doc(
+        `${
+          isAdmin ? "cashbook" + newDate.getFullYear() : "cashbook_guest"
+        }/${editingRecordId}`
+      )
+      .update(newRecord);
     initStates();
     handleClose("editing");
   };
@@ -171,7 +179,7 @@ const Cashbook = () => {
   const UpdateCheckbox = async (event, record) => {
     event.preventDefault();
     await dbService
-      .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${record.id}`)
+      .doc(`${isAdmin ? "cashbook" + year : "cashbook_guest"}/${record.id}`)
       .update({ settled: !record.settled });
     initStates();
   };
@@ -208,7 +216,7 @@ const Cashbook = () => {
     const ok = window.confirm("Are you sure?");
     if (ok) {
       await dbService
-        .doc(`${isAdmin ? "cashbook" : "cashbook2"}/${id}`)
+        .doc(`${isAdmin ? "cashbook" + year : "cashbook_guest"}/${id}`)
         .delete();
     }
   };
@@ -218,6 +226,15 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setMonth(value);
+    dbService
+      .collection(isAdmin ? "cashbook" + year : "cashbook_guest")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   };
 
   const selectYear = (event) => {
@@ -225,6 +242,15 @@ const Cashbook = () => {
       target: { value },
     } = event;
     setYear(value);
+    dbService
+      .collection(isAdmin ? "cashbook" + value : "cashbook_guest")
+      .onSnapshot((snapshot) => {
+        const recordArray = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecords(recordArray);
+      });
   };
 
   return (
@@ -240,6 +266,7 @@ const Cashbook = () => {
                 label="selectYear"
                 onChange={selectYear}
               >
+                <MenuItem value={2024}>2024</MenuItem>
                 <MenuItem value={2023}>2023</MenuItem>
                 <MenuItem value={2022}>2022</MenuItem>
                 <MenuItem value={2021}>2021</MenuItem>
