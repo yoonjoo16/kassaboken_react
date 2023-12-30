@@ -20,12 +20,13 @@ import {
   Box,
   Modal,
   Autocomplete,
-  Checkbox,
+  Alert,
 } from "@mui/material";
 import DateAdapter from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DatePicker from "@mui/lab/DatePicker";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { Calculate } from "@mui/icons-material";
 
 const CommonAccount = () => {
   const [newUser, setNewUser] = useState("");
@@ -45,6 +46,12 @@ const CommonAccount = () => {
   const [addingOpen, setAddingOpen] = useState(false);
   const [editingOpen, setEditingOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState("");
+
+  const [settlement, setSettlement] = useState({
+    deposits: 0,
+    withdrawals: 0,
+    balance: 0,
+  });
 
   var isAdmin = JSON.parse(window.localStorage.getItem("isAdmin"));
 
@@ -122,6 +129,29 @@ const CommonAccount = () => {
       return b.date - a.date;
     });
     setSelectedRecords(filtered);
+  };
+
+  useEffect(() => {
+    calculate();
+  }, [selectedRecords]);
+
+  const calculate = () => {
+    var totalWithdrawals = 0;
+    var totalDeposits = 0;
+
+    selectedRecords.forEach((obj) => {
+      if (obj.category == "Withdrawal") {
+        totalWithdrawals += obj.amount;
+      } else {
+        totalDeposits += obj.amount;
+      }
+    });
+    var totalBalance = totalDeposits - totalWithdrawals;
+    setSettlement({
+      withdrawals: totalWithdrawals,
+      deposits: totalDeposits,
+      balance: totalBalance,
+    });
   };
 
   const handleOpen = (mod) => {
@@ -242,6 +272,14 @@ const CommonAccount = () => {
     <div>
       <Box sx={{ m: 1 }}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <Alert severity="info">
+              Deposits : {settlement.deposits} / Withdrawals :{" "}
+              {settlement.withdrawals}
+            </Alert>
+            <Alert severity="success">Balance : {settlement.balance}</Alert>
+          </Grid>
+
           <Grid item xs={8}>
             <FormControl sx={{ minWidth: 80 }}>
               <InputLabel id="selectYear-label">Year</InputLabel>
@@ -320,6 +358,7 @@ const CommonAccount = () => {
                       onChange={onUserChange}
                       label="user"
                     >
+                      <MenuItem value={"None"}>None</MenuItem>
                       <MenuItem value={"Erik"}>Erik</MenuItem>
                       <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
                     </Select>
@@ -475,6 +514,7 @@ const CommonAccount = () => {
                                       onChange={onUserChange}
                                       label="user"
                                     >
+                                      <MenuItem value={"None"}>None</MenuItem>
                                       <MenuItem value={"Erik"}>Erik</MenuItem>
                                       <MenuItem value={"Yoonjoo"}>
                                         Yoonjoo
