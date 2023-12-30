@@ -4,6 +4,7 @@ import Home from "routes/Home";
 import Auth from "routes/Auth";
 import Cashbook from "routes/Cashbook";
 import Calculator from "routes/Calculator";
+import CommonAccount from "routes/CommonAccount";
 import Statistics from "routes/Statistics";
 import Navigation from "components/Navigation";
 import AddPlaces from "routes/AddPlaces";
@@ -26,6 +27,9 @@ const AppRouter = ({ isLoggedIn, isAdmin }) => {
             </Route>
             <Route exact path="/calculator">
               <Calculator />
+            </Route>
+            <Route exact path="/common">
+              <CommonAccount />
             </Route>
             <Route exact path="/statistics">
               <Statistics />
