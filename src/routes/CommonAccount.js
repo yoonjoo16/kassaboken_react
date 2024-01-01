@@ -29,7 +29,6 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { Calculate } from "@mui/icons-material";
 
 const CommonAccount = () => {
-  const [newUser, setNewUser] = useState("");
   const [newPlace, setNewPlace] = useState({ label: "", category: "" });
   const [newDate, setNewDate] = useState(new Date());
   const [newAmount, setNewAmount] = useState(0);
@@ -66,7 +65,6 @@ const CommonAccount = () => {
   };
 
   const initStates = () => {
-    setNewUser("");
     setNewPlace({ label: "", category: "" });
     setNewDate(new Date());
     setNewAmount(0);
@@ -173,7 +171,6 @@ const CommonAccount = () => {
   const onSubmit = async (event) => {
     event.preventDefault();
     const newRecord = {
-      user: newUser,
       place: newPlace,
       date: newDate,
       amount: newAmount,
@@ -192,7 +189,6 @@ const CommonAccount = () => {
   const onUpdate = async (event) => {
     event.preventDefault();
     const newRecord = {
-      user: newUser,
       place: newPlace,
       date: newDate,
       amount: newAmount,
@@ -213,13 +209,6 @@ const CommonAccount = () => {
       target: { value },
     } = event;
     setNewCategory(value);
-  };
-
-  const onUserChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setNewUser(value);
   };
 
   const onAmountChange = (event) => {
@@ -347,22 +336,6 @@ const CommonAccount = () => {
                       <MenuItem value={"Withdrawal"}>Withdrawal</MenuItem>
                     </Select>
                   </FormControl>
-                  <FormControl margin="normal" style={{ minWidth: 200 }}>
-                    <InputLabel id="adding-simple-select-helper-label">
-                      User
-                    </InputLabel>
-                    <Select
-                      labelId="adding-simple-select-helper-label"
-                      id="adding-simple-select-helper"
-                      value={newUser}
-                      onChange={onUserChange}
-                      label="user"
-                    >
-                      <MenuItem value={"None"}>None</MenuItem>
-                      <MenuItem value={"Erik"}>Erik</MenuItem>
-                      <MenuItem value={"Yoonjoo"}>Yoonjoo</MenuItem>
-                    </Select>
-                  </FormControl>
                   <br />
                   <FormControl margin="normal">
                     <LocalizationProvider dateAdapter={DateAdapter}>
@@ -423,9 +396,6 @@ const CommonAccount = () => {
                         Category
                       </TableCell>
                       <TableCell style={{ width: "10%" }} align="center">
-                        Name
-                      </TableCell>
-                      <TableCell style={{ width: "10%" }} align="center">
                         Amount
                       </TableCell>
                       <TableCell style={{ width: "20%" }} align="center">
@@ -449,8 +419,6 @@ const CommonAccount = () => {
                           </Moment>
                         </TableCell>
                         <TableCell align="center">{record.category}</TableCell>
-                        <TableCell align="center">{record.user}</TableCell>
-
                         <TableCell align="center">{record.amount}</TableCell>
                         <TableCell align="center">
                           {record.place.label}
@@ -465,7 +433,6 @@ const CommonAccount = () => {
                             <Button
                               onClick={(e) => {
                                 setEditingRecordId(record.id);
-                                setNewUser(record.user);
                                 setNewAmount(record.amount);
                                 setNewDate(record.date.toDate());
                                 setNewPlace(record.place);
@@ -499,25 +466,6 @@ const CommonAccount = () => {
                                       </MenuItem>
                                       <MenuItem value={"Withdrawal"}>
                                         Withdrawal
-                                      </MenuItem>
-                                    </Select>
-                                  </FormControl>
-
-                                  <FormControl margin="normal">
-                                    <InputLabel id="editing-simple-select-helper-label">
-                                      User
-                                    </InputLabel>
-                                    <Select
-                                      labelId="editing-simple-select-helper-label"
-                                      id="editing-simple-select-helper"
-                                      value={newUser}
-                                      onChange={onUserChange}
-                                      label="user"
-                                    >
-                                      <MenuItem value={"None"}>None</MenuItem>
-                                      <MenuItem value={"Erik"}>Erik</MenuItem>
-                                      <MenuItem value={"Yoonjoo"}>
-                                        Yoonjoo
                                       </MenuItem>
                                     </Select>
                                   </FormControl>
