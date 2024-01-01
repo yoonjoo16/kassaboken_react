@@ -130,6 +130,16 @@ const Navigation = ({ isLoggedIn }) => {
             underline="hover"
             color="inherit"
             component={RouterLink}
+            to="/common"
+          >
+            Common Account
+          </Link>
+        </MenuItem>
+        <MenuItem onClick={toggleDrawer}>
+          <Link
+            underline="hover"
+            color="inherit"
+            component={RouterLink}
             to="/addplaces"
           >
             Add places
